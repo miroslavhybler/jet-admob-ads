@@ -1,5 +1,6 @@
 package com.jet.admob.example.screens
 
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -9,40 +10,61 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.google.android.gms.ads.AdSize
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.example.LazyColumnScreen
-import com.jet.admob.example.screens.bannerItem
 import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 
 /**
- * TODO
  * @author Miroslav Hýbler<br>
  * created on 07.01.2026
  */
 @Composable
 fun AdaptiveBannersScreen() {
     val context = LocalContext.current
-    val dst = LocalResources.current.displayMetrics.density
+    val density = LocalDensity.current
     val screenWidth = LocalResources.current.displayMetrics.widthPixels
+    val screenWidthDp = (screenWidth / density.density).toInt()
 
-    val adSize = remember {
-        AdSize.getPortraitAnchoredAdaptiveBannerAdSize(
-            context,
-            (screenWidth / dst).toInt()
-        )
+    val landscapeAnchoredAdSize = remember {
+        AdSize.getLandscapeAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+    }
+
+    val portraitAnchoredAdSize = remember {
+        AdSize.getPortraitAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+    }
+
+    val inlineAdaptiveAdSize = remember {
+        AdSize.getInlineAdaptiveBannerAdSize(screenWidthDp, 128)
     }
 
     LazyColumnScreen(
         title = "Adaptive Banners",
     ) {
-        
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-            adSize = adSize,
-            label = "AdSize.getPortraitAnchoredAdaptiveBannerAdSize $adSize",
+            adSize = landscapeAnchoredAdSize,
+            label = "getLandscapeAnchoredAdaptiveBannerAdSize()",
+        )
+        bannerItem(
+            adSize = portraitAnchoredAdSize,
+            label = "portraitAnchoredAdSize()",
+        )
+        bannerItem(
+            adSize = inlineAdaptiveAdSize,
+            label = "inlineAdaptiveAdSize()",
         )
     }
 }
 
+private fun LazyListScope.bannerItem(
+    adSize: AdSize,
+    label: String,
+) {
+
+    bannerItem(
+        adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
+        adSize = adSize,
+        label = "$label: $adSize"
+    )
+}
 
 @Composable
 @PreviewLightDark

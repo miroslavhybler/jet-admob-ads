@@ -9,7 +9,12 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -30,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
@@ -51,8 +57,10 @@ import com.google.android.material.button.MaterialButton
 sealed class NativeAdFormat {
     /** A small, banner-like native ad format. */
     object Small : NativeAdFormat()
+
     /** A medium-sized native ad format that includes a [MediaView]. */
     object Medium : NativeAdFormat()
+
     /** A full-screen native ad format for a more immersive experience. */
     object FullScreen : NativeAdFormat()
 }
@@ -89,7 +97,7 @@ private fun loadNativeAd(
     val adLoader = builder
         .withAdListener(object : AdListener() {
             override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.e("NATIVE_AD", "Failed to load native ad: ${"$"}{adError.message}")
+                Log.e("NATIVE_AD", "Failed to load native ad: ${adError.message}")
                 callback(null)
             }
         })
@@ -132,11 +140,27 @@ object NativeAdDefaults {
      * Provides a default shape based on the ad format.
      */
     @Composable
-    fun shape(format: NativeAdFormat = NativeAdFormat.Small): Shape {
+    fun shape(
+        format: NativeAdFormat,
+    ): Shape {
         return when (format) {
             is NativeAdFormat.Small -> RectangleShape
-            is NativeAdFormat.Medium -> MaterialTheme.shapes.medium
+            is NativeAdFormat.Medium -> MaterialTheme.shapes.large
             is NativeAdFormat.FullScreen -> RectangleShape
+        }
+    }
+
+    /**
+     * Provides a default content padding based on the ad format.
+     * For [NativeAdFormat.FullScreen], it uses the safe drawing insets to avoid system UI.
+     * @since 1.0.0
+     */
+    @Composable
+    fun contentPadding(format: NativeAdFormat): PaddingValues {
+        return when (format) {
+            is NativeAdFormat.Small -> PaddingValues(all = 8.dp)
+            is NativeAdFormat.Medium -> PaddingValues(all = 12.dp)
+            is NativeAdFormat.FullScreen -> WindowInsets.safeDrawing.asPaddingValues()
         }
     }
 }
@@ -158,6 +182,7 @@ object NativeAdDefaults {
  * @param buttonShape The shape to be applied to the call-to-action button. Defaults to [RectangleShape].
  * @param colors An instance of [NativeAdColors] to customize the colors of the ad container, content, and button.
  *               If null, the default colors from the XML template and app theme will be used.
+ * @param contentPadding The padding to be applied to the content of the ad, inside the container.
  * @since 1.0.0
  */
 @Composable
@@ -168,6 +193,7 @@ fun AdMobNative(
     shape: Shape = NativeAdDefaults.shape(format = adFormat),
     buttonShape: Shape = ButtonDefaults.shape,
     colors: NativeAdColors = NativeAdDefaults.colors(),
+    contentPadding: PaddingValues = NativeAdDefaults.contentPadding(format = adFormat),
 ) {
 
     val context = LocalContext.current
@@ -189,9 +215,14 @@ fun AdMobNative(
         }
     }
 
+    val adModifier = when (adFormat) {
+        is NativeAdFormat.FullScreen -> modifier.fillMaxSize()
+        else -> modifier.fillMaxWidth()
+    }
+
     nativeAd?.let { nativeAd ->
         AndroidView(
-            modifier = modifier.fillMaxWidth(),
+            modifier = adModifier,
             factory = {
                 val layout = when (adFormat) {
                     is NativeAdFormat.Small -> R.layout.view_ad_small
@@ -201,7 +232,16 @@ fun AdMobNative(
                 LayoutInflater.from(it).inflate(layout, null) as NativeAdView
             },
             update = { adView ->
-                // Find all the views from the layout
+                // Apply content padding
+                (adView.getChildAt(0) as? View)?.let { contentView ->
+                    applyPadding(
+                        view = contentView,
+                        contentPadding = contentPadding,
+                        density = density,
+                    )
+                }
+
+
                 val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
                 val bodyView = adView.findViewById<TextView>(R.id.ad_body)
                 val callToActionView = adView.findViewById<MaterialButton>(R.id.ad_call_to_action)
@@ -308,5 +348,37 @@ private fun applyShapeAndColor(
             }
             view.background = background
         }
+    }
+}
+
+
+private fun applyPadding(
+    view: View,
+    contentPadding: PaddingValues,
+    density: Density,
+) {
+    val viewLayoutDirection = if (view.layoutDirection == View.LAYOUT_DIRECTION_RTL)
+        LayoutDirection.Rtl
+    else
+        LayoutDirection.Ltr
+    with(receiver = density) {
+        val left = contentPadding
+            .calculateLeftPadding(layoutDirection = viewLayoutDirection)
+            .roundToPx()
+        val top = contentPadding
+            .calculateTopPadding()
+            .roundToPx()
+        val right = contentPadding
+            .calculateRightPadding(layoutDirection = viewLayoutDirection)
+            .roundToPx()
+        val bottom = contentPadding
+            .calculateBottomPadding()
+            .roundToPx()
+        view.setPadding(
+            left,
+            top,
+            right,
+            bottom
+        )
     }
 }

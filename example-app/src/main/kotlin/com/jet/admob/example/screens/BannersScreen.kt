@@ -20,6 +20,7 @@ import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 
 /**
+ * Examples of Banners with fixed size using defined [AdSize]
  * @author Miroslav Hýbler<br>
  * created on 07.01.2026
  */
@@ -39,7 +40,7 @@ fun BannersScreen() {
             adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
             adSize = AdSize.FULL_BANNER,
             label = "AdSize.FULL_BANNER",
-
+            preOccupySpace = true,
             )
         bannerItem(
             adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,

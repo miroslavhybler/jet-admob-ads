@@ -1,6 +1,8 @@
 package com.jet.admob.example.screens
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 
 /**
+ * Examples of Native ads
  * @author Miroslav Hýbler<br>
  * created on 08.01.2026
  */
@@ -24,7 +27,6 @@ fun NativeAdsScreen() {
     LazyColumnScreen(
         title = "Native ads"
     ) {
-
 
         item {
             AdMobNative(
@@ -41,6 +43,7 @@ fun NativeAdsScreen() {
 
         item {
             AdMobNative(
+                modifier = Modifier.padding(horizontal = 20.dp),
                 adUnitId = AdMobAdsUtil.TestIds.NATIVE,
                 adFormat = NativeAdFormat.Medium,
             )

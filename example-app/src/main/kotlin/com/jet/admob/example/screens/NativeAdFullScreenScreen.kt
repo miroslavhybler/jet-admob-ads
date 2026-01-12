@@ -8,8 +8,6 @@ import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobNative
 import com.jet.admob.NativeAdColors
 import com.jet.admob.NativeAdFormat
-import com.jet.admob.example.LazyColumnScreen
-
 
 /**
  * @author Miroslav Hýbler <br>
@@ -17,21 +15,17 @@ import com.jet.admob.example.LazyColumnScreen
  */
 @Composable
 fun NativeAdFullScreenScreen() {
-    LazyColumnScreen(
-        title = "Native fullscreen ad"
-    ) {
-        item {
-            AdMobNative(
-                modifier = Modifier.fillMaxSize(),
-                adUnitId = AdMobAdsUtil.TestIds.NATIVE_VIDEO,
-                adFormat = NativeAdFormat.FullScreen,
-                colors = NativeAdColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    buttonColor = MaterialTheme.colorScheme.primary,
-                    buttonTextColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    }
+    // A full-screen ad should not be placed inside a scrollable container like LazyColumn.
+    // It should occupy the entire screen space available to it.
+    AdMobNative(
+        modifier = Modifier.fillMaxSize(), // This modifier will now correctly fill the screen
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE_VIDEO,
+        adFormat = NativeAdFormat.FullScreen,
+        colors = NativeAdColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            buttonColor = MaterialTheme.colorScheme.primary,
+            buttonTextColor = MaterialTheme.colorScheme.onPrimary
+        )
+    )
 }
