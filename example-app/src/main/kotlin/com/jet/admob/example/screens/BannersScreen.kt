@@ -21,7 +21,7 @@ import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 /**
  * Examples of Banners with fixed size using defined [AdSize]
- * @author Miroslav Hýbler<br>
+ * @author Miroslav Hýbler <br>
  * created on 07.01.2026
  */
 @Composable

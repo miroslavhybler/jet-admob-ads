@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 
 
 /**
- * @author Miroslav Hýbler<br>
+ * @author Miroslav Hýbler <br>
  * created on 07.01.2026
  */
 @Composable

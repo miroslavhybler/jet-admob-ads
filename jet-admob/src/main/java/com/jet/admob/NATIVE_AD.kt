@@ -46,6 +46,7 @@ import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.material.button.MaterialButton
+import com.jet.admob.annotations.JetAdMobAlpha
 
 /**
  * Defines the available formats for the [AdMobNative] composable.
@@ -185,6 +186,7 @@ object NativeAdDefaults {
  * @param contentPadding The padding to be applied to the content of the ad, inside the container.
  * @since 1.0.0
  */
+@JetAdMobAlpha
 @Composable
 fun AdMobNative(
     modifier: Modifier = Modifier,
@@ -232,8 +234,8 @@ fun AdMobNative(
                 LayoutInflater.from(it).inflate(layout, null) as NativeAdView
             },
             update = { adView ->
-                // Apply content padding
-                (adView.getChildAt(0) as? View)?.let { contentView ->
+                //Apply content padding to the view so padding/margin will behave as expected for Compose
+                adView.getChildAt(0)?.let { contentView ->
                     applyPadding(
                         view = contentView,
                         contentPadding = contentPadding,
@@ -250,7 +252,7 @@ fun AdMobNative(
                 val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
                 val starRatingView = adView.findViewById<RatingBar>(R.id.ad_stars)
 
-                // Apply colors and shape
+                //Setting up background of adView
                 applyShapeAndColor(
                     view = adView,
                     shape = shape,
@@ -263,6 +265,7 @@ fun AdMobNative(
                 advertiserView?.setTextColor(colors.contentColor.toArgb())
 
                 callToActionView?.let {
+                    //Setting up background of action button
                     applyShapeAndColor(
                         view = it,
                         shape = buttonShape,

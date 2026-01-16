@@ -19,7 +19,7 @@ import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 /**
  * Examples of Native ads
- * @author Miroslav Hýbler<br>
+ * @author Miroslav Hýbler <br>
  * created on 08.01.2026
  */
 @Composable

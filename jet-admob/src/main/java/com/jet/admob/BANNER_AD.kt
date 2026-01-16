@@ -22,6 +22,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.jet.admob.annotations.JetAdMobAlpha
 
 
 /**
@@ -46,6 +47,7 @@ import com.google.android.gms.ads.AdView
  * created on 06.01.2026
  * @since 1.0.0
  */
+@JetAdMobAlpha
 @Composable
 fun AdMobBanner(
     modifier: Modifier = Modifier,
