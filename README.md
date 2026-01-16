@@ -2,6 +2,9 @@
 
 A simple, fast way to use Google AdMob ads in your Jetpack Compose applications.
 
+> [!WARNING]
+> This library is currently in an alpha stage and is highly experimental. While it is designed to be safe and policy-compliant, please use it with caution and report any issues you encounter.
+
 This library provides a set of composables that make it easy to display banner and native ads with a high degree of customization, allowing you to seamlessly integrate them into your app's design while adhering to AdMob's policies.
 
 ## Prerequisites
@@ -11,6 +14,28 @@ Before using this library, you should have a basic understanding of how to work 
 - [Google Mobile Ads SDK for Android](https://developers.google.com/admob/android/quick-start)
 - [Banner Ads](https://developers.google.com/admob/android/banner)
 - [Native Ads](https://developers.google.com/admob/android/native/start)
+
+## Installation
+
+To add this library to your project, follow these steps:
+
+1.  Add the JitPack repository to your `settings.gradle.kts` file:
+
+    ```kotlin
+    dependencyResolutionManagement {
+        repositories {
+            maven(url = "https://jitpack.io")
+        }
+    }
+    ```
+
+2.  Add the dependency to your app's `build.gradle.kts` file:
+
+    ```kotlin
+    dependencies {
+        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0-alpha01")
+    }
+    ```
 
 ## Usage
 
