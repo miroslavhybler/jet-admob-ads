@@ -39,6 +39,7 @@ fun AdaptiveBannersScreen() {
     LazyColumnScreen(
         title = "Adaptive Banners",
     ) {
+        //This is just for this example simplification, try not to use ads in lazyColumn
         bannerItem(
             adSize = landscapeAnchoredAdSize,
             label = "getLandscapeAnchoredAdaptiveBannerAdSize()",

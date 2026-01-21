@@ -30,6 +30,7 @@ fun BannersScreen() {
     LazyColumnScreen(
         title = "Basic Banners",
     ) {
+        //This is just for this example simplification, try not to use ads in lazyColumn
         bannerItem(
             adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
             adSize = AdSize.BANNER,

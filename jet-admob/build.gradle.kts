@@ -61,14 +61,13 @@ dependencies {
     implementation(libs.androidx.appcompat)
 
     compileOnly(platform(libs.androidx.compose.bom))
-    debugCompileOnly(libs.androidx.compose.ui.tooling)
-
     compileOnly(libs.androidx.compose.ui)
     compileOnly(libs.androidx.compose.ui.graphics)
+    compileOnly(libs.androidx.compose.ui.tooling)
     compileOnly(libs.androidx.compose.ui.tooling.preview)
     compileOnly(libs.androidx.compose.material3)
 
-    /** Google AdMod Ads SDK */
+    /** Google AdMob Ads SDK */
     implementation(libs.play.services.ads.api)
 
     /** XML for Native ads */

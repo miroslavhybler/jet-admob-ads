@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -28,7 +29,8 @@
             android:textAppearance="?attr/textAppearanceTitleLarge"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/ad_icon"
-            app:layout_constraintTop_toTopOf="@+id/ad_icon" />
+            app:layout_constraintTop_toTopOf="@+id/ad_icon"
+            tools:text="Headline" />
 
         <TextView
             android:id="@+id/ad_advertiser"
@@ -40,7 +42,8 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             app:layout_constraintEnd_toEndOf="@+id/ad_headline"
             app:layout_constraintStart_toStartOf="@+id/ad_headline"
-            app:layout_constraintTop_toBottomOf="@+id/ad_headline" />
+            app:layout_constraintTop_toBottomOf="@+id/ad_headline"
+            tools:text="Advertiser" />
 
 
         <RatingBar
@@ -64,7 +67,8 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@+id/ad_stars"
-            app:layout_constraintTop_toBottomOf="@+id/ad_stars" />
+            app:layout_constraintTop_toBottomOf="@+id/ad_stars"
+            tools:text="Ad body" />
 
 
         <com.google.android.gms.ads.nativead.MediaView
@@ -82,7 +86,8 @@
             android:layout_margin="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="Call to Action" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

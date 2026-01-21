@@ -1,3 +1,5 @@
+@file:Suppress("OPT_IN_USAGE")
+
 package com.jet.admob
 
 import android.view.View
@@ -59,15 +61,6 @@ fun AdMobBanner(
 ) {
     val isInspection = LocalInspectionMode.current
 
-    val adjustedModifier = if (preOccupySpace) {
-        modifier.size(
-            width = adSize.width.dp,
-            height = adSize.height.dp
-        )
-    } else {
-        modifier.wrapContentSize()
-    }
-
     if (isInspection) {
         AdMobBannerInspection(
             modifier = modifier.size(
@@ -77,6 +70,17 @@ fun AdMobBanner(
             adSize = adSize,
         )
     } else {
+
+        val adjustedModifier = if (preOccupySpace) {
+            modifier.size(
+                width = adSize.width.dp,
+                height = adSize.height.dp
+            )
+        } else {
+            modifier.wrapContentSize()
+        }
+
+
         AndroidView(
             modifier = adjustedModifier,
             factory = { context ->
@@ -96,6 +100,11 @@ fun AdMobBanner(
     }
 }
 
+
+/**
+ * Preview to show how much space will banner occupy
+ * @param adSize The size of the banner ad.
+ */
 @Composable
 private fun AdMobBannerInspection(
     modifier: Modifier,
@@ -130,7 +139,7 @@ private fun AdMobBannerPreview() {
     ) {
         AdMobBanner(
             modifier = Modifier,
-            adUnitId = "ca-app-pub-3940256099942544/6300978111", // Test ID
+            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
             adSize = AdSize.LARGE_BANNER
         )
     }
