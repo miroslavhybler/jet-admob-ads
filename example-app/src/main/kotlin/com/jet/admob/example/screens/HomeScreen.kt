@@ -43,6 +43,13 @@ fun HomeScreen(
         )
 
         buttonItem(
+            text = "Interstitial Ad",
+            onClick = {
+                onNavigate(Route.InterstitialAd)
+            },
+        )
+
+        buttonItem(
             text = "Native Ads",
             onClick = {
                 onNavigate(Route.NativeAds)
