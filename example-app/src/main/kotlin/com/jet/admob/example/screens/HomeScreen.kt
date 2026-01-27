@@ -55,6 +55,13 @@ fun HomeScreen(
                 onNavigate(Route.NativeAdFullScreen)
             },
         )
+
+        buttonItem(
+            text = "Rewarded Ad",
+            onClick = {
+                onNavigate(Route.Rewarded)
+            },
+        )
     }
 }
 
