@@ -3,9 +3,7 @@ package com.jet.admob
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,7 +22,7 @@ import com.jet.admob.annotations.JetAdMobAlpha
  *
  * @param context The current Android context.
  * @param adUnitId The ad unit ID for the interstitial ad.
- * @param isAutoloading Whether to automatically load the ad when the state is first created.
+ * @param isAutoloading Whether to automatically load the ad when the state is first created and after when an ad is dismissed.
  *
  * @author Miroslav Hýbler <br>
  * created on 21.01.2024
@@ -177,7 +175,11 @@ sealed interface AdPresentationState {
  * Creates and remembers an [AdMobInterstitialAdState].
  *
  * @param adUnitId The ad unit ID to use for the ad.
- * @param isAutoloading Whether to automatically load the ad.
+ * @param isAutoloading Whether to automatically load an ad.
+ * Defaults to `true`. Setting this to `true` is recommended for a better user experience, as ads
+ * are pre-loaded and can be shown instantly. However, this might affect your AdMob statistics,
+ * as an ad request is made even if the ad is not shown. If this is a concern, you can set it to
+ * `false` and manually call [AdMobInterstitialAdState.loadAd] to control when ads are loaded.
  * @since 1.0.0
  */
 @JetAdMobAlpha
