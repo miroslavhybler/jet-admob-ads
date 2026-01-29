@@ -11,6 +11,7 @@ import com.jet.admob.example.screens.HomeScreen
 import com.jet.admob.example.screens.InterstitialAdScreen
 import com.jet.admob.example.screens.NativeAdFullScreenScreen
 import com.jet.admob.example.screens.NativeAdsScreen
+import com.jet.admob.example.screens.RewardedScreen
 import kotlinx.serialization.Serializable
 
 
@@ -51,6 +52,9 @@ fun MainNavDisplay() {
                 entry<Route.NativeAdFullScreen> {
                     NativeAdFullScreenScreen()
                 }
+                entry<Route.Rewarded> {
+                    RewardedScreen()
+                }
             }
         )
     )
@@ -78,4 +82,6 @@ sealed class Route : NavKey {
     @Serializable
     object NativeAdFullScreen : Route()
 
+    @Serializable
+    object Rewarded : Route()
 }
