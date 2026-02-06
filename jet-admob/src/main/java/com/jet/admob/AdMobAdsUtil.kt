@@ -14,6 +14,10 @@ package com.jet.admob
 object AdMobAdsUtil {
 
 
+    /**
+     * AdMob Test Ids for debugging.
+     * @since 1.0.0
+     */
     public object TestIds {
         public const val SAMPLE_APP_ID: String = "ca-app-pub-3940256099942544~3347511713"
 

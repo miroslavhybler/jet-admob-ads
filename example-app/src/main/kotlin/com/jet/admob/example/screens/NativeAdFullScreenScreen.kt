@@ -18,8 +18,8 @@ fun NativeAdFullScreenScreen() {
     // A full-screen ad should not be placed inside a scrollable container like LazyColumn.
     // It should occupy the entire screen space available to it.
     AdMobNative(
-        modifier = Modifier.fillMaxSize(), // This modifier will now correctly fill the screen
-        adUnitId = AdMobAdsUtil.TestIds.NATIVE_VIDEO,
+        modifier = Modifier.fillMaxSize(),
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE, //NATIVE_VIDEO can be used too but it often returns Ad Error 3 (no fill)
         adFormat = NativeAdFormat.FullScreen,
         colors = NativeAdColors(
             containerColor = MaterialTheme.colorScheme.surface,

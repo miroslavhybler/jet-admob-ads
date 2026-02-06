@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -33,6 +34,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -47,6 +50,7 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.material.button.MaterialButton
 import com.jet.admob.annotations.JetAdMobAlpha
+import kotlin.random.Random
 
 /**
  * Defines the available formats for the [AdMobNative] composable.
@@ -76,7 +80,7 @@ sealed class NativeAdFormat {
  * @author Miroslav Hýbler
  * @since 1.0.0
  */
-data class NativeAdColors constructor(
+data class NativeAdColors(
     val containerColor: Color,
     val contentColor: Color,
     val buttonColor: Color,
@@ -197,7 +201,41 @@ fun AdMobNative(
     colors: NativeAdColors = NativeAdDefaults.colors(),
     contentPadding: PaddingValues = NativeAdDefaults.contentPadding(format = adFormat),
 ) {
+    val isInspection = LocalInspectionMode.current
 
+    if (isInspection) {
+        AdMobNativePreview(
+            modifier = modifier,
+            adFormat = adFormat,
+            contentPadding = contentPadding,
+            shape = shape,
+            buttonShape = buttonShape,
+            colors = colors,
+        )
+    } else {
+        AdMobNativeImpl(
+            modifier = modifier,
+            adUnitId = adUnitId,
+            adFormat = adFormat,
+            contentPadding = contentPadding,
+            shape = shape,
+            buttonShape = buttonShape,
+            colors = colors,
+        )
+    }
+}
+
+
+@Composable
+private fun AdMobNativeImpl(
+    modifier: Modifier,
+    adUnitId: String,
+    adFormat: NativeAdFormat,
+    contentPadding: PaddingValues,
+    shape: Shape,
+    buttonShape: Shape,
+    colors: NativeAdColors,
+) {
     val context = LocalContext.current
     var nativeAd by remember { mutableStateOf<NativeAd?>(value = null) }
     val density = LocalDensity.current
@@ -242,7 +280,6 @@ fun AdMobNative(
                         density = density,
                     )
                 }
-
 
                 val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
                 val bodyView = adView.findViewById<TextView>(R.id.ad_body)
@@ -303,6 +340,131 @@ fun AdMobNative(
             }
         )
     }
+}
+
+
+/**
+ * A preview of the AdMobNative composable.
+ */
+@Composable
+private fun AdMobNativePreview(
+    modifier: Modifier,
+    adFormat: NativeAdFormat,
+    contentPadding: PaddingValues,
+    shape: Shape,
+    buttonShape: Shape,
+    colors: NativeAdColors,
+) {
+    val density = LocalDensity.current
+
+    AndroidView(
+        modifier = modifier,
+        factory = {
+            val layout = when (adFormat) {
+                is NativeAdFormat.Small -> R.layout.view_ad_small
+                is NativeAdFormat.Medium -> R.layout.view_ad_medium
+                is NativeAdFormat.FullScreen -> R.layout.view_ad_fullscreen
+            }
+            LayoutInflater.from(it).inflate(layout, null) as NativeAdView
+        },
+        update = { adView ->
+            //Apply content padding to the view so padding/margin will behave as expected for Compose
+            adView.getChildAt(0)?.let { contentView ->
+                applyPadding(
+                    view = contentView,
+                    contentPadding = contentPadding,
+                    density = density,
+                )
+            }
+
+            val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
+            val bodyView = adView.findViewById<TextView>(R.id.ad_body)
+            val callToActionView = adView.findViewById<MaterialButton>(R.id.ad_call_to_action)
+            val iconView = adView.findViewById<ImageView>(R.id.ad_icon)
+            val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
+            val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
+            val starRatingView = adView.findViewById<RatingBar>(R.id.ad_stars)
+
+            //Setting up background of adView
+            applyShapeAndColor(
+                view = adView,
+                shape = shape,
+                color = colors.containerColor,
+                density = density,
+            )
+
+            headlineView?.setTextColor(colors.contentColor.toArgb())
+            bodyView?.setTextColor(colors.contentColor.toArgb())
+            advertiserView?.setTextColor(colors.contentColor.toArgb())
+
+            callToActionView?.let {
+                //Setting up background of action button
+                applyShapeAndColor(
+                    view = it,
+                    shape = buttonShape,
+                    color = colors.buttonColor,
+                    density = density,
+                )
+                it.setTextColor(colors.buttonTextColor.toArgb())
+            }
+
+
+            // Populate the views with the ad content
+            headlineView.text = "Headline"
+            bodyView.text = "Body"
+            callToActionView.text = "Install"
+
+            iconView.setImageDrawable(
+                AppCompatResources.getDrawable(
+                    adView.context,
+                    R.drawable.jet_admob_ad_icon
+                )
+            )
+            adView.iconView = iconView
+            //TODO  replacement for  mediaView?.mediaContent = nativeAd.mediaContent
+            advertiserView?.text = "Advertiser"
+            starRatingView?.rating = Random.nextFloat()
+                .coerceIn(minimumValue = 0f, maximumValue = 5f)
+
+            // Register the views
+            adView.headlineView = headlineView
+            adView.bodyView = bodyView
+            adView.callToActionView = callToActionView
+            adView.advertiserView = advertiserView
+            adView.starRatingView = starRatingView
+            adView.mediaView = mediaView
+        }
+    )
+}
+
+@JetAdMobAlpha
+@Preview(showBackground = true)
+@Composable
+private fun AdMobNativeSmallPreview() {
+    AdMobNative(
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+        adFormat = NativeAdFormat.Small,
+    )
+}
+
+@JetAdMobAlpha
+@Preview(showBackground = true)
+@Composable
+private fun AdMobNativeMediumPreview() {
+    AdMobNative(
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+        adFormat = NativeAdFormat.Medium,
+    )
+}
+
+@JetAdMobAlpha
+@Preview(showBackground = true)
+@Composable
+private fun AdMobNativeFullScreenPreview() {
+    AdMobNative(
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE_VIDEO,
+        adFormat = NativeAdFormat.FullScreen,
+    )
 }
 
 
