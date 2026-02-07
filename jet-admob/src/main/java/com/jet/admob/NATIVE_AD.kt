@@ -421,7 +421,7 @@ private fun AdMobNativePreview(
                 )
             )
             adView.iconView = iconView
-            //TODO  replacement for  mediaView?.mediaContent = nativeAd.mediaContent
+            //mediaView?.mediaContent = nativeAd.mediaContent
             advertiserView?.text = "Advertiser"
             starRatingView?.rating = Random.nextFloat()
                 .coerceIn(minimumValue = 0f, maximumValue = 5f)

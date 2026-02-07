@@ -3,6 +3,7 @@ package com.jet.admob
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -108,7 +109,15 @@ class AdMobInterstitialAdState constructor(
     fun show(
         onAdDismissed: () -> Unit = {},
     ) {
-        val activity = context.findActivity() ?: return
+        val activity = context.findActivity() ?: run {
+            Log.e(
+                "INTERSTITIAL_AD",
+                "Unable to show InterstitialAd, the context.findActivity() returned null! " +
+                        "Please report an issue https://github.com/miroslavhybler/jet-admob-ads/issues " +
+                        "here and provide all the details that can be useful for debugging."
+            )
+            return
+        }
         interstitialAd?.let { ad ->
             ad.fullScreenContentCallback = object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
@@ -188,7 +197,6 @@ fun rememberAdMobInterstitialAdState(
     adUnitId: String,
     isAutoloading: Boolean = true
 ): AdMobInterstitialAdState {
-    //TODO use LocalActivity
     val context = LocalContext.current
     val state = remember(key1 = adUnitId) {
         AdMobInterstitialAdState(
@@ -198,18 +206,4 @@ fun rememberAdMobInterstitialAdState(
         )
     }
     return state
-}
-
-
-/**
- * Helper function to find the current Activity from a given Context.
- * @since 1.0.0
- */
-private fun Context.findActivity(): Activity? {
-    var context = this
-    while (context is ContextWrapper) {
-        if (context is Activity) return context
-        context = context.baseContext
-    }
-    return null
 }

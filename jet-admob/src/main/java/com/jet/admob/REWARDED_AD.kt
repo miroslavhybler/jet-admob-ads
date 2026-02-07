@@ -70,9 +70,17 @@ class AdMobRewardedAdState constructor(
      * @return True if the ad was shown, false otherwise.
      */
     fun show(context: Context): Boolean {
-        val activity = context.findActivity()
-        val adToShow = rewardedAd
-        if (adToShow == null || activity == null) {
+        val activity = context.findActivity() ?: run {
+            Log.e(
+                "REWARDED_AD",
+                "Unable to show RewardedAd, the context.findActivity() returned null! " +
+                        "Please report an issue https://github.com/miroslavhybler/jet-admob-ads/issues " +
+                        "here and provide all the details that can be useful for debugging."
+            )
+            return false
+        }
+        val adToShow = rewardedAd ?: run {
+            Log.w("REWARDED_AD", "A show() was called but the rewarded ad wasn't ready yet")
             return false
         }
 
@@ -128,14 +136,4 @@ fun rememberAdMobRewardedAdState(
     }
 
     return rewardedAdState
-}
-
-//TODO use LocalActivity
-private fun Context.findActivity(): Activity? {
-    var context = this
-    while (context is ContextWrapper) {
-        if (context is Activity) return context
-        context = context.baseContext
-    }
-    return null
 }
