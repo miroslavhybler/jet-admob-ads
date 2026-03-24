@@ -13,13 +13,17 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -70,34 +74,73 @@ fun AdMobBanner(
             adSize = adSize,
         )
     } else {
-
-        val adjustedModifier = if (preOccupySpace) {
-            modifier.size(
-                width = adSize.width.dp,
-                height = adSize.height.dp
-            )
-        } else {
-            modifier.wrapContentSize()
-        }
-
-
-        AndroidView(
-            modifier = adjustedModifier,
-            factory = { context ->
-                AdView(context).apply {
-                    this.id = View.generateViewId()
-                    this.adUnitId = adUnitId
-                    this.setAdSize(adSize)
-
-                    if (adListener != null) {
-                        this.adListener = adListener
-                    }
-
-                    this.loadAd(loadAdRequest())
-                }
-            }
+        AdMobBannerImplementation(
+            modifier = modifier,
+            preOccupySpace = preOccupySpace,
+            adUnitId = adUnitId,
+            adSize = adSize,
+            adListener = adListener,
+            loadAdRequest = loadAdRequest,
         )
     }
+}
+
+
+/**
+ * Implementation of Banner
+ * @since 1.0.0
+ */
+@Composable
+private fun AdMobBannerImplementation(
+    modifier: Modifier,
+    preOccupySpace: Boolean,
+    adUnitId: String,
+    adSize: AdSize,
+    adListener: AdListener?,
+    loadAdRequest: () -> AdRequest,
+) {
+
+    val adjustedModifier = if (preOccupySpace) {
+        modifier.size(
+            width = adSize.width.dp,
+            height = adSize.height.dp
+        )
+    } else {
+        modifier.wrapContentSize()
+    }
+
+    val context = LocalContext.current
+    val adView = remember {
+        AdView(context).apply {
+            this.id = View.generateViewId()
+            this.adUnitId = adUnitId
+            this.setAdSize(adSize)
+
+            if (adListener != null) {
+                this.adListener = adListener
+            }
+
+            this.loadAd(loadAdRequest())
+        }
+    }
+
+    LifecycleResumeEffect(key1 = adView) {
+        adView.resume()
+        onPauseOrDispose {
+            adView.pause()
+        }
+    }
+
+    DisposableEffect(key1 = adView) {
+        onDispose {
+            adView.destroy()
+        }
+    }
+
+    AndroidView(
+        modifier = adjustedModifier,
+        factory = { adView },
+    )
 }
 
 

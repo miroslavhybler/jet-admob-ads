@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -409,7 +410,7 @@ private fun AdMobNativePreview(
             }
 
 
-            // Populate the views with the ad content
+            // Populate the views with the ad content for the preview
             headlineView.text = "Headline"
             bodyView.text = "Body"
             callToActionView.text = "Install"
