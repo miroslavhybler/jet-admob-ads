@@ -9,8 +9,8 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.google.android.gms.ads.AdSize
 import com.jet.admob.AdMobAdsUtil
+import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
-import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 
 /**

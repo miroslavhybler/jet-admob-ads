@@ -4,10 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.jet.admob.example.screens.AdaptiveBannersScreen
-import com.jet.admob.example.theme.JetAdMobAdsTheme
-import com.jet.admob.example.screens.BannersScreen
-import com.jet.admob.example.screens.NativeAdsScreen
 
 /**
  * @author Miroslav Hýbler <br>
