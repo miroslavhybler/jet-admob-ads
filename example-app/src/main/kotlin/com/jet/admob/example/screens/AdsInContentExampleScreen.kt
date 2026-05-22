@@ -16,8 +16,8 @@ import com.jet.admob.AdMobNative
 import com.jet.admob.NativeAdColors
 import com.jet.admob.NativeAdFormat
 import com.jet.admob.annotations.JetAdMobAlpha
+import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
-import com.jet.admob.example.theme.JetAdMobAdsTheme
 import com.jet.admob.rememberAdMobBannerState
 import com.jet.admob.rememberAdMobNativeAdState
 

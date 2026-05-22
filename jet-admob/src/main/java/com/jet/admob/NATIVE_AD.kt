@@ -24,11 +24,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -104,6 +105,8 @@ data class NativeAdColors(
 class AdMobNativeAdState internal constructor(
     private val context: Context?,
     val adUnitId: String,
+    private var loadAdRequest: () -> AdRequest,
+    private var adListener: AdListener?,
 ) {
 
     internal var nativeAd: NativeAd? by mutableStateOf(value = null)
@@ -119,9 +122,14 @@ class AdMobNativeAdState internal constructor(
     /**
      * Loads the native ad if it is not already loaded or loading.
      *
+     * @param loadAdRequest A lambda that returns an [AdRequest].
+     * @param adListener An [AdListener] for observing ad events.
      * @since 1.0.0
      */
-    fun loadAd() {
+    fun loadAd(
+        loadAdRequest: () -> AdRequest = this.loadAdRequest,
+        adListener: AdListener? = this.adListener,
+    ) {
         val context = context ?: return
         if (isLoading || nativeAd != null || isDestroyed) return
 
@@ -129,6 +137,8 @@ class AdMobNativeAdState internal constructor(
         loadNativeAd(
             context = context,
             adUnitId = adUnitId,
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
         ) { ad ->
             isLoading = false
             if (isDestroyed) {
@@ -140,6 +150,14 @@ class AdMobNativeAdState internal constructor(
             nativeAd = ad
             previousAd?.destroy()
         }
+    }
+
+    internal fun updateLoadOptions(
+        loadAdRequest: () -> AdRequest,
+        adListener: AdListener?,
+    ) {
+        this.loadAdRequest = loadAdRequest
+        this.adListener = adListener
     }
 
     internal fun getNativeAdView(adFormat: NativeAdFormat): NativeAdView? {
@@ -166,12 +184,16 @@ class AdMobNativeAdState internal constructor(
  * Hoist this above lazy list items if the native ad is displayed inside a `LazyColumn`/`LazyRow`.
  *
  * @param adUnitId The ad unit ID for this native ad.
+ * @param loadAdRequest A lambda that returns an [AdRequest].
+ * @param adListener An [AdListener] for observing ad events.
  * @since 1.0.0
  */
 @JetAdMobAlpha
 @Composable
 fun rememberAdMobNativeAdState(
     adUnitId: String,
+    loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
+    adListener: AdListener? = null,
 ): AdMobNativeAdState {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
@@ -180,11 +202,23 @@ fun rememberAdMobNativeAdState(
         AdMobNativeAdState(
             context = if (isInspection) null else context,
             adUnitId = adUnitId,
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
+        )
+    }
+
+    SideEffect {
+        state.updateLoadOptions(
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
         )
     }
 
     LaunchedEffect(key1 = state) {
-        state.loadAd()
+        state.loadAd(
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
+        )
     }
 
     DisposableEffect(key1 = state) {
@@ -201,6 +235,8 @@ fun rememberAdMobNativeAdState(
 private fun loadNativeAd(
     context: Context,
     adUnitId: String,
+    loadAdRequest: () -> AdRequest,
+    adListener: AdListener?,
     callback: (NativeAd?) -> Unit,
 ) {
     val builder = AdLoader.Builder(context, adUnitId)
@@ -210,9 +246,34 @@ private fun loadNativeAd(
 
     val adLoader = builder
         .withAdListener(object : AdListener() {
+            override fun onAdClicked() {
+                adListener?.onAdClicked()
+            }
+
+            override fun onAdClosed() {
+                adListener?.onAdClosed()
+            }
+
             override fun onAdFailedToLoad(adError: LoadAdError) {
                 Log.e("NATIVE_AD", "Failed to load native ad: ${adError.message}")
+                adListener?.onAdFailedToLoad(adError)
                 callback(null)
+            }
+
+            override fun onAdImpression() {
+                adListener?.onAdImpression()
+            }
+
+            override fun onAdLoaded() {
+                adListener?.onAdLoaded()
+            }
+
+            override fun onAdOpened() {
+                adListener?.onAdOpened()
+            }
+
+            override fun onAdSwipeGestureClicked() {
+                adListener?.onAdSwipeGestureClicked()
             }
         })
         .withNativeAdOptions(
@@ -222,7 +283,7 @@ private fun loadNativeAd(
         )
         .build()
 
-    adLoader.loadAd(AdRequest.Builder().build())
+    adLoader.loadAd(loadAdRequest())
 }
 
 
@@ -300,6 +361,8 @@ object NativeAdDefaults {
  *
  * @param modifier The modifier to be applied to the ad container.
  * @param adUnitId The ad unit ID for this native ad. See [Test ads](https://developers.google.com/admob/android/test-ads) for test ad unit IDs.
+ * @param loadAdRequest A lambda that returns an [AdRequest]. Defaults to a new [AdRequest.Builder().build()].
+ * @param adListener An [AdListener] for observing ad events.
  * @param adFormat The format of the native ad, which determines the underlying XML layout to be inflated. See [NativeAdFormat].
  * @param shape The shape of the ad container. Defaults to [RectangleShape].
  * @param buttonShape The shape to be applied to the call-to-action button. Defaults to [RectangleShape].
@@ -311,7 +374,7 @@ object NativeAdDefaults {
 @Deprecated(
     message = "This overload will become private soon. Use rememberAdMobNativeAdState() and AdMobNative(state = ...) instead.",
     replaceWith = ReplaceWith(
-        expression = "AdMobNative(modifier = modifier, state = rememberAdMobNativeAdState(adUnitId = adUnitId), adFormat = adFormat, shape = shape, buttonShape = buttonShape, colors = colors, contentPadding = contentPadding)",
+        expression = "AdMobNative(modifier = modifier, state = rememberAdMobNativeAdState(adUnitId = adUnitId, loadAdRequest = loadAdRequest, adListener = adListener), adFormat = adFormat, shape = shape, buttonShape = buttonShape, colors = colors, contentPadding = contentPadding)",
         imports = [
             "com.jet.admob.AdMobNative",
             "com.jet.admob.rememberAdMobNativeAdState",
@@ -323,13 +386,19 @@ object NativeAdDefaults {
 fun AdMobNative(
     modifier: Modifier = Modifier,
     adUnitId: String,
+    loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
+    adListener: AdListener? = null,
     adFormat: NativeAdFormat = NativeAdFormat.Small,
     shape: Shape = NativeAdDefaults.shape(format = adFormat),
     buttonShape: Shape = ButtonDefaults.shape,
     colors: NativeAdColors = NativeAdDefaults.colors(),
     contentPadding: PaddingValues = NativeAdDefaults.contentPadding(format = adFormat),
 ) {
-    val state = rememberAdMobNativeAdState(adUnitId = adUnitId)
+    val state = rememberAdMobNativeAdState(
+        adUnitId = adUnitId,
+        loadAdRequest = loadAdRequest,
+        adListener = adListener,
+    )
 
     AdMobNative(
         modifier = modifier,

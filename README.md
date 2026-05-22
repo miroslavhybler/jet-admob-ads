@@ -119,5 +119,7 @@ LazyColumn {
 
 The older `AdMobBanner(adUnitId = ..., adSize = ...)` and `AdMobNative(adUnitId = ...)`
 overloads are still available for now, but they are deprecated and will become private soon.
+Both `rememberAdMobBannerState` and `rememberAdMobNativeAdState` also accept optional
+`loadAdRequest` and `adListener` parameters for custom targeting and event observation.
 
 For more advanced usage and customization options, please refer to the source code and the example app included in this project.

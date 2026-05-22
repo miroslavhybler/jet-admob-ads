@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.jet.admob.annotations.JetAdMobAlpha
 
 
@@ -46,19 +48,85 @@ class AdMobBannerState internal constructor(
     val adUnitId: String,
     val adSize: AdSize,
     private val adView: AdView?,
+    private var loadAdRequest: () -> AdRequest,
+    private var adListener: AdListener?,
 ) {
+
+    private var isLoading: Boolean = false
+    private var isLoaded: Boolean = false
+    private var isDestroyed: Boolean = false
 
     internal val isLoadedForInspection: Boolean
         get() = adView == null
+
+    /**
+     * Loads the banner ad if it is not already loaded or loading.
+     *
+     * @param loadAdRequest A lambda that returns an [AdRequest].
+     * @param adListener An [AdListener] for observing ad events.
+     * @since 1.0.0
+     */
+    fun loadAd(
+        loadAdRequest: () -> AdRequest = this.loadAdRequest,
+        adListener: AdListener? = this.adListener,
+    ) {
+        val adView = adView ?: return
+        if (isLoading || isLoaded || isDestroyed) return
+
+        isLoading = true
+        this.loadAdRequest = loadAdRequest
+        this.adListener = adListener
+        updateAdListener(adListener = adListener)
+        adView.loadAd(loadAdRequest())
+    }
 
     internal fun getAdView(): AdView? {
         (adView?.parent as? ViewGroup)?.removeView(adView)
         return adView
     }
 
-    internal fun updateAdListener(adListener: AdListener?) {
-        if (adListener != null) {
-            adView?.adListener = adListener
+    internal fun updateLoadOptions(
+        loadAdRequest: () -> AdRequest,
+        adListener: AdListener?,
+    ) {
+        this.loadAdRequest = loadAdRequest
+        this.adListener = adListener
+        updateAdListener(adListener = adListener)
+    }
+
+    private fun updateAdListener(adListener: AdListener?) {
+        adView?.adListener = object : AdListener() {
+            override fun onAdClicked() {
+                adListener?.onAdClicked()
+            }
+
+            override fun onAdClosed() {
+                adListener?.onAdClosed()
+            }
+
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                isLoading = false
+                isLoaded = false
+                adListener?.onAdFailedToLoad(adError)
+            }
+
+            override fun onAdImpression() {
+                adListener?.onAdImpression()
+            }
+
+            override fun onAdLoaded() {
+                isLoading = false
+                isLoaded = true
+                adListener?.onAdLoaded()
+            }
+
+            override fun onAdOpened() {
+                adListener?.onAdOpened()
+            }
+
+            override fun onAdSwipeGestureClicked() {
+                adListener?.onAdSwipeGestureClicked()
+            }
         }
     }
 
@@ -71,6 +139,7 @@ class AdMobBannerState internal constructor(
     }
 
     internal fun destroy() {
+        isDestroyed = true
         adView?.destroy()
     }
 }
@@ -102,6 +171,8 @@ fun rememberAdMobBannerState(
         AdMobBannerState(
             adUnitId = adUnitId,
             adSize = adSize,
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
             adView = if (isInspection) {
                 null
             } else {
@@ -109,17 +180,23 @@ fun rememberAdMobBannerState(
                     id = View.generateViewId()
                     this.adUnitId = adUnitId
                     setAdSize(adSize)
-                    if (adListener != null) {
-                        this.adListener = adListener
-                    }
-                    loadAd(loadAdRequest())
                 }
             },
         )
     }
 
     SideEffect {
-        state.updateAdListener(adListener = adListener)
+        state.updateLoadOptions(
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
+        )
+    }
+
+    LaunchedEffect(key1 = state) {
+        state.loadAd(
+            loadAdRequest = loadAdRequest,
+            adListener = adListener,
+        )
     }
 
     DisposableEffect(key1 = state) {

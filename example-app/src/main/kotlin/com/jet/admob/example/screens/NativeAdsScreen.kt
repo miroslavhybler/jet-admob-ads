@@ -1,9 +1,6 @@
 package com.jet.admob.example.screens
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,8 +10,8 @@ import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobNative
 import com.jet.admob.NativeAdColors
 import com.jet.admob.NativeAdFormat
+import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
-import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 
 /**

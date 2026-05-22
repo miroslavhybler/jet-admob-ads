@@ -15,8 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.google.android.gms.ads.AdSize
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobBanner
+import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
-import com.jet.admob.example.theme.JetAdMobAdsTheme
 
 
 /**
