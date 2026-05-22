@@ -64,6 +64,13 @@ fun HomeScreen(
         )
 
         buttonItem(
+            text = "Ads in Content",
+            onClick = {
+                onNavigate(Route.AdsInContent)
+            },
+        )
+
+        buttonItem(
             text = "Rewarded Ad",
             onClick = {
                 onNavigate(Route.Rewarded)

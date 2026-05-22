@@ -41,19 +41,32 @@ To add this library to your project, follow these steps:
 
 ### Banner Ad
 
-To display a simple banner ad, use the `AdMobBanner` composable:
+Create a banner state with `rememberAdMobBannerState`, then pass it to `AdMobBanner`:
 
 ```kotlin
-AdMobBanner(adUnitId = "YOUR_AD_UNIT_ID")
+val bannerState = rememberAdMobBannerState(
+    adUnitId = "YOUR_AD_UNIT_ID",
+    adSize = AdSize.BANNER,
+)
+
+AdMobBanner(
+    state = bannerState,
+    preOccupySpace = true,
+)
 ```
 
 ### Native Ad
 
-To display a native ad, use the `AdMobNative` composable. You can choose from different formats and customize the colors and shapes to match your app's theme.
+Create a native ad state with `rememberAdMobNativeAdState`, then pass it to `AdMobNative`.
+You can choose from different formats and customize the colors and shapes to match your app's theme.
 
 ```kotlin
-AdMobNative(
+val nativeAdState = rememberAdMobNativeAdState(
     adUnitId = "YOUR_AD_UNIT_ID",
+)
+
+AdMobNative(
+    state = nativeAdState,
     adFormat = NativeAdFormat.Medium,
     shape = RoundedCornerShape(12.dp),
     colors = NativeAdColors(
@@ -64,5 +77,47 @@ AdMobNative(
     )
 )
 ```
+
+### Ads in Lazy Lists
+
+When placing ads inside `LazyColumn` or `LazyRow`, hoist the ad state outside the lazy item.
+This keeps the loaded ad alive when Compose temporarily disposes off-screen list items.
+
+```kotlin
+val bannerState = rememberAdMobBannerState(
+    adUnitId = "YOUR_BANNER_AD_UNIT_ID",
+    adSize = AdSize.BANNER,
+)
+val nativeAdState = rememberAdMobNativeAdState(
+    adUnitId = "YOUR_NATIVE_AD_UNIT_ID",
+)
+
+LazyColumn {
+    items(contentItems) { item ->
+        Text(text = item.title)
+    }
+
+    item(key = "banner-ad") {
+        AdMobBanner(
+            state = bannerState,
+            preOccupySpace = true,
+        )
+    }
+
+    items(moreContentItems) { item ->
+        Text(text = item.title)
+    }
+
+    item(key = "native-ad") {
+        AdMobNative(
+            state = nativeAdState,
+            adFormat = NativeAdFormat.Medium,
+        )
+    }
+}
+```
+
+The older `AdMobBanner(adUnitId = ..., adSize = ...)` and `AdMobNative(adUnitId = ...)`
+overloads are still available for now, but they are deprecated and will become private soon.
 
 For more advanced usage and customization options, please refer to the source code and the example app included in this project.

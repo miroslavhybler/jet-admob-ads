@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.jet.admob.example.screens.AdsInContentExampleScreen
 import com.jet.admob.example.screens.AdaptiveBannersScreen
 import com.jet.admob.example.screens.BannersScreen
 import com.jet.admob.example.screens.HomeScreen
@@ -52,6 +53,9 @@ fun MainNavDisplay() {
                 entry<Route.NativeAdFullScreen> {
                     NativeAdFullScreenScreen()
                 }
+                entry<Route.AdsInContent> {
+                    AdsInContentExampleScreen()
+                }
                 entry<Route.Rewarded> {
                     RewardedScreen()
                 }
@@ -81,6 +85,9 @@ sealed class Route : NavKey {
 
     @Serializable
     object NativeAdFullScreen : Route()
+
+    @Serializable
+    object AdsInContent : Route()
 
     @Serializable
     object Rewarded : Route()

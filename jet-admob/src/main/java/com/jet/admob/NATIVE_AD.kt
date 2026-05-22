@@ -1,3 +1,5 @@
+@file:Suppress("OPT_IN_USAGE")
+
 package com.jet.admob
 
 import android.content.Context
@@ -6,6 +8,7 @@ import android.graphics.drawable.GradientDrawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
@@ -25,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -40,7 +44,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -89,6 +92,111 @@ data class NativeAdColors(
 )
 
 
+/**
+ * State holder for a native ad.
+ *
+ * Hoist this state above lazy list items to keep the loaded [NativeAd] and inflated
+ * [NativeAdView] alive while the list item is temporarily disposed.
+ *
+ * @since 1.0.0
+ */
+@JetAdMobAlpha
+class AdMobNativeAdState internal constructor(
+    private val context: Context?,
+    val adUnitId: String,
+) {
+
+    internal var nativeAd: NativeAd? by mutableStateOf(value = null)
+        private set
+
+    private var isLoading: Boolean = false
+    private var isDestroyed: Boolean = false
+    private val nativeAdViews = mutableMapOf<NativeAdFormat, NativeAdView>()
+
+    internal val isLoadedForInspection: Boolean
+        get() = context == null
+
+    /**
+     * Loads the native ad if it is not already loaded or loading.
+     *
+     * @since 1.0.0
+     */
+    fun loadAd() {
+        val context = context ?: return
+        if (isLoading || nativeAd != null || isDestroyed) return
+
+        isLoading = true
+        loadNativeAd(
+            context = context,
+            adUnitId = adUnitId,
+        ) { ad ->
+            isLoading = false
+            if (isDestroyed) {
+                ad?.destroy()
+                return@loadNativeAd
+            }
+
+            val previousAd = nativeAd
+            nativeAd = ad
+            previousAd?.destroy()
+        }
+    }
+
+    internal fun getNativeAdView(adFormat: NativeAdFormat): NativeAdView? {
+        val context = context ?: return null
+        val adView = nativeAdViews.getOrPut(adFormat) {
+            LayoutInflater.from(context).inflate(nativeAdLayout(adFormat), null) as NativeAdView
+        }
+        (adView.parent as? ViewGroup)?.removeView(adView)
+        return adView
+    }
+
+    internal fun destroy() {
+        isDestroyed = true
+        nativeAd?.destroy()
+        nativeAd = null
+        nativeAdViews.clear()
+    }
+}
+
+
+/**
+ * Creates and remembers an [AdMobNativeAdState].
+ *
+ * Hoist this above lazy list items if the native ad is displayed inside a `LazyColumn`/`LazyRow`.
+ *
+ * @param adUnitId The ad unit ID for this native ad.
+ * @since 1.0.0
+ */
+@JetAdMobAlpha
+@Composable
+fun rememberAdMobNativeAdState(
+    adUnitId: String,
+): AdMobNativeAdState {
+    val context = LocalContext.current
+    val isInspection = LocalInspectionMode.current
+
+    val state = remember(context, adUnitId, isInspection) {
+        AdMobNativeAdState(
+            context = if (isInspection) null else context,
+            adUnitId = adUnitId,
+        )
+    }
+
+    LaunchedEffect(key1 = state) {
+        state.loadAd()
+    }
+
+    DisposableEffect(key1 = state) {
+        onDispose {
+            state.destroy()
+        }
+    }
+
+    return state
+}
+
+
 // Loads a native ad from AdMob.
 private fun loadNativeAd(
     context: Context,
@@ -115,6 +223,15 @@ private fun loadNativeAd(
         .build()
 
     adLoader.loadAd(AdRequest.Builder().build())
+}
+
+
+private fun nativeAdLayout(adFormat: NativeAdFormat): Int {
+    return when (adFormat) {
+        is NativeAdFormat.Small -> R.layout.view_ad_small
+        is NativeAdFormat.Medium -> R.layout.view_ad_medium
+        is NativeAdFormat.FullScreen -> R.layout.view_ad_fullscreen
+    }
 }
 
 /**
@@ -191,6 +308,16 @@ object NativeAdDefaults {
  * @param contentPadding The padding to be applied to the content of the ad, inside the container.
  * @since 1.0.0
  */
+@Deprecated(
+    message = "This overload will become private soon. Use rememberAdMobNativeAdState() and AdMobNative(state = ...) instead.",
+    replaceWith = ReplaceWith(
+        expression = "AdMobNative(modifier = modifier, state = rememberAdMobNativeAdState(adUnitId = adUnitId), adFormat = adFormat, shape = shape, buttonShape = buttonShape, colors = colors, contentPadding = contentPadding)",
+        imports = [
+            "com.jet.admob.AdMobNative",
+            "com.jet.admob.rememberAdMobNativeAdState",
+        ],
+    ),
+)
 @JetAdMobAlpha
 @Composable
 fun AdMobNative(
@@ -202,9 +329,49 @@ fun AdMobNative(
     colors: NativeAdColors = NativeAdDefaults.colors(),
     contentPadding: PaddingValues = NativeAdDefaults.contentPadding(format = adFormat),
 ) {
+    val state = rememberAdMobNativeAdState(adUnitId = adUnitId)
+
+    AdMobNative(
+        modifier = modifier,
+        state = state,
+        adFormat = adFormat,
+        contentPadding = contentPadding,
+        shape = shape,
+        buttonShape = buttonShape,
+        colors = colors,
+    )
+}
+
+
+/**
+ * A composable that displays a native ad from AdMob using a hoisted [AdMobNativeAdState].
+ *
+ * Hoist [state] above lazy list items to avoid reloading the ad whenever the item is disposed and
+ * later composed again.
+ *
+ * @param modifier The modifier to be applied to the ad container.
+ * @param state The remembered state that owns the loaded [NativeAd].
+ * @param adFormat The format of the native ad, which determines the underlying XML layout to be inflated. See [NativeAdFormat].
+ * @param shape The shape of the ad container. Defaults to [RectangleShape].
+ * @param buttonShape The shape to be applied to the call-to-action button. Defaults to [RectangleShape].
+ * @param colors An instance of [NativeAdColors] to customize the colors of the ad container, content, and button.
+ * @param contentPadding The padding to be applied to the content of the ad, inside the container.
+ * @since 1.0.0
+ */
+@JetAdMobAlpha
+@Composable
+fun AdMobNative(
+    modifier: Modifier = Modifier,
+    state: AdMobNativeAdState,
+    adFormat: NativeAdFormat = NativeAdFormat.Small,
+    shape: Shape = NativeAdDefaults.shape(format = adFormat),
+    buttonShape: Shape = ButtonDefaults.shape,
+    colors: NativeAdColors = NativeAdDefaults.colors(),
+    contentPadding: PaddingValues = NativeAdDefaults.contentPadding(format = adFormat),
+) {
     val isInspection = LocalInspectionMode.current
 
-    if (isInspection) {
+    if (isInspection || state.isLoadedForInspection) {
         AdMobNativePreview(
             modifier = modifier,
             adFormat = adFormat,
@@ -216,7 +383,7 @@ fun AdMobNative(
     } else {
         AdMobNativeImpl(
             modifier = modifier,
-            adUnitId = adUnitId,
+            state = state,
             adFormat = adFormat,
             contentPadding = contentPadding,
             shape = shape,
@@ -230,116 +397,98 @@ fun AdMobNative(
 @Composable
 private fun AdMobNativeImpl(
     modifier: Modifier,
-    adUnitId: String,
+    state: AdMobNativeAdState,
     adFormat: NativeAdFormat,
     contentPadding: PaddingValues,
     shape: Shape,
     buttonShape: Shape,
     colors: NativeAdColors,
 ) {
-    val context = LocalContext.current
-    var nativeAd by remember { mutableStateOf<NativeAd?>(value = null) }
     val density = LocalDensity.current
-
-    LaunchedEffect(key1 = adUnitId) {
-        loadNativeAd(
-            context = context,
-            adUnitId = adUnitId,
-        ) { ad ->
-            nativeAd = ad
-        }
-    }
-
-    DisposableEffect(key1 = adUnitId) {
-        onDispose {
-            nativeAd?.destroy()
-        }
-    }
 
     val adModifier = when (adFormat) {
         is NativeAdFormat.FullScreen -> modifier.fillMaxSize()
         else -> modifier.fillMaxWidth()
     }
 
-    nativeAd?.let { nativeAd ->
-        AndroidView(
-            modifier = adModifier,
-            factory = {
-                val layout = when (adFormat) {
-                    is NativeAdFormat.Small -> R.layout.view_ad_small
-                    is NativeAdFormat.Medium -> R.layout.view_ad_medium
-                    is NativeAdFormat.FullScreen -> R.layout.view_ad_fullscreen
-                }
-                LayoutInflater.from(it).inflate(layout, null) as NativeAdView
-            },
-            update = { adView ->
-                //Apply content padding to the view so padding/margin will behave as expected for Compose
-                adView.getChildAt(0)?.let { contentView ->
-                    applyPadding(
-                        view = contentView,
-                        contentPadding = contentPadding,
-                        density = density,
-                    )
-                }
+    state.nativeAd?.let { nativeAd ->
+        key(adFormat) {
+            AndroidView(
+                modifier = adModifier,
+                factory = {
+                    state.getNativeAdView(adFormat = adFormat)
+                        ?: LayoutInflater.from(it).inflate(nativeAdLayout(adFormat), null) as NativeAdView
+                },
+                update = { adView ->
+                    //Apply content padding to the view so padding/margin will behave as expected for Compose
+                    adView.getChildAt(0)?.let { contentView ->
+                        applyPadding(
+                            view = contentView,
+                            contentPadding = contentPadding,
+                            density = density,
+                        )
+                    }
 
-                val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
-                val bodyView = adView.findViewById<TextView>(R.id.ad_body)
-                val callToActionView = adView.findViewById<MaterialButton>(R.id.ad_call_to_action)
-                val iconView = adView.findViewById<ImageView>(R.id.ad_icon)
-                val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
-                val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
-                val starRatingView = adView.findViewById<RatingBar>(R.id.ad_stars)
+                    val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
+                    val bodyView = adView.findViewById<TextView>(R.id.ad_body)
+                    val callToActionView = adView.findViewById<MaterialButton>(R.id.ad_call_to_action)
+                    val iconView = adView.findViewById<ImageView>(R.id.ad_icon)
+                    val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
+                    val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
+                    val starRatingView = adView.findViewById<RatingBar>(R.id.ad_stars)
 
-                //Setting up background of adView
-                applyShapeAndColor(
-                    view = adView,
-                    shape = shape,
-                    color = colors.containerColor,
-                    density = density,
-                )
-
-                headlineView?.setTextColor(colors.contentColor.toArgb())
-                bodyView?.setTextColor(colors.contentColor.toArgb())
-                advertiserView?.setTextColor(colors.contentColor.toArgb())
-
-                callToActionView?.let {
-                    //Setting up background of action button
+                    //Setting up background of adView
                     applyShapeAndColor(
-                        view = it,
-                        shape = buttonShape,
-                        color = colors.buttonColor,
+                        view = adView,
+                        shape = shape,
+                        color = colors.containerColor,
                         density = density,
                     )
-                    it.setTextColor(colors.buttonTextColor.toArgb())
+
+                    headlineView?.setTextColor(colors.contentColor.toArgb())
+                    bodyView?.setTextColor(colors.contentColor.toArgb())
+                    advertiserView?.setTextColor(colors.contentColor.toArgb())
+
+                    callToActionView?.let {
+                        //Setting up background of action button
+                        applyShapeAndColor(
+                            view = it,
+                            shape = buttonShape,
+                            color = colors.buttonColor,
+                            density = density,
+                        )
+                        it.setTextColor(colors.buttonTextColor.toArgb())
+                    }
+
+
+                    // Populate the views with the ad content
+                    headlineView.text = nativeAd.headline
+                    bodyView.text = nativeAd.body
+                    callToActionView.text = nativeAd.callToAction
+                    nativeAd.icon?.drawable?.let {
+                        iconView.setImageDrawable(it)
+                        iconView.visibility = View.VISIBLE
+                        adView.iconView = iconView
+                    } ?: run {
+                        iconView.visibility = View.GONE
+                    }
+                    mediaView?.mediaContent = nativeAd.mediaContent
+                    advertiserView?.text = nativeAd.advertiser
+                    starRatingView?.rating = nativeAd.starRating?.toFloat() ?: 0f
+
+                    // Register the views
+                    adView.headlineView = headlineView
+                    adView.bodyView = bodyView
+                    adView.callToActionView = callToActionView
+                    adView.advertiserView = advertiserView
+                    adView.starRatingView = starRatingView
+                    adView.mediaView = mediaView
+
+                    // Set the native ad to the ad view
+                    adView.setNativeAd(nativeAd)
                 }
-
-
-                // Populate the views with the ad content
-                headlineView.text = nativeAd.headline
-                bodyView.text = nativeAd.body
-                callToActionView.text = nativeAd.callToAction
-                nativeAd.icon?.drawable?.let {
-                    iconView.setImageDrawable(it)
-                    adView.iconView = iconView
-                } ?: run {
-                    iconView.visibility = View.GONE
-                }
-                mediaView?.mediaContent = nativeAd.mediaContent
-                advertiserView?.text = nativeAd.advertiser
-                starRatingView?.rating = nativeAd.starRating?.toFloat() ?: 0f
-
-                // Register the views
-                adView.headlineView = headlineView
-                adView.bodyView = bodyView
-                adView.callToActionView = callToActionView
-                adView.advertiserView = advertiserView
-                adView.starRatingView = starRatingView
-                adView.mediaView = mediaView
-
-                // Set the native ad to the ad view
-                adView.setNativeAd(nativeAd)
-            }
-        )
+            )
+        }
     }
 }
 
@@ -361,12 +510,7 @@ private fun AdMobNativePreview(
     AndroidView(
         modifier = modifier,
         factory = {
-            val layout = when (adFormat) {
-                is NativeAdFormat.Small -> R.layout.view_ad_small
-                is NativeAdFormat.Medium -> R.layout.view_ad_medium
-                is NativeAdFormat.FullScreen -> R.layout.view_ad_fullscreen
-            }
-            LayoutInflater.from(it).inflate(layout, null) as NativeAdView
+            LayoutInflater.from(it).inflate(nativeAdLayout(adFormat), null) as NativeAdView
         },
         update = { adView ->
             //Apply content padding to the view so padding/margin will behave as expected for Compose
@@ -442,8 +586,12 @@ private fun AdMobNativePreview(
 @Preview(showBackground = true)
 @Composable
 private fun AdMobNativeSmallPreview() {
-    AdMobNative(
+    val nativeAdState = rememberAdMobNativeAdState(
         adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+    )
+
+    AdMobNative(
+        state = nativeAdState,
         adFormat = NativeAdFormat.Small,
     )
 }
@@ -452,8 +600,12 @@ private fun AdMobNativeSmallPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun AdMobNativeMediumPreview() {
-    AdMobNative(
+    val nativeAdState = rememberAdMobNativeAdState(
         adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+    )
+
+    AdMobNative(
+        state = nativeAdState,
         adFormat = NativeAdFormat.Medium,
     )
 }
@@ -462,8 +614,12 @@ private fun AdMobNativeMediumPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun AdMobNativeFullScreenPreview() {
-    AdMobNative(
+    val nativeAdState = rememberAdMobNativeAdState(
         adUnitId = AdMobAdsUtil.TestIds.NATIVE_VIDEO,
+    )
+
+    AdMobNative(
+        state = nativeAdState,
         adFormat = NativeAdFormat.FullScreen,
     )
 }
