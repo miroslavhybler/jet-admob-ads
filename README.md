@@ -33,7 +33,7 @@ To add this library to your project, follow these steps:
 
     ```kotlin
     dependencies {
-        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0-alpha01")
+        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0-alpha02")
     }
     ```
 
