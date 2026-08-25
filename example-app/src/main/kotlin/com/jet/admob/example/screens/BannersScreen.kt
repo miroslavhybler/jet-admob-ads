@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, JetAdMobAlpha::class)
 
 package com.jet.admob.example.screens
 
@@ -12,11 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.ads.AdSize
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobBanner
+import com.jet.admob.AdMobBannerState
+import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
+import com.jet.admob.rememberAdMobBannerState
 
 
 /**
@@ -26,44 +28,60 @@ import com.jet.admob.example.LazyColumnScreen
  */
 @Composable
 fun BannersScreen() {
+    val bannerState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
+        adSize = AdMobBannerState.BANNER,
+    )
+    val fullBannerState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
+        adSize = AdMobBannerState.FULL_BANNER,
+    )
+    val largeBannerState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
+        adSize = AdMobBannerState.LARGE_BANNER,
+    )
+    val leaderboardState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
+        adSize = AdMobBannerState.LEADERBOARD,
+    )
+    val mediumRectangleState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
+        adSize = AdMobBannerState.MEDIUM_RECTANGLE,
+    )
+    val wideSkyscraperState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
+        adSize = AdMobBannerState.WIDE_SKYSCRAPER,
+    )
 
     LazyColumnScreen(
         title = "Basic Banners",
     ) {
-        //This is just for this example simplification, try not to use ads in lazyColumn
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-            adSize = AdSize.BANNER,
+            adState = bannerState,
             label = "AdSize.BANNER",
         )
 
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-            adSize = AdSize.FULL_BANNER,
+            adState = fullBannerState,
             label = "AdSize.FULL_BANNER",
             preOccupySpace = true,
-            )
+        )
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-            adSize = AdSize.LARGE_BANNER,
+            adState = largeBannerState,
             label = "AdSize.LARGE_BANNER",
-
-            )
+        )
 
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-            adSize = AdSize.LEADERBOARD,
+            adState = leaderboardState,
             label = "AdSize.LEADERBOARD",
         )
 
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-            adSize = AdSize.MEDIUM_RECTANGLE,
+            adState = mediumRectangleState,
             label = "AdSize.MEDIUM_RECTANGLE",
         )
         bannerItem(
-            adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
-            adSize = AdSize.WIDE_SKYSCRAPER,
+            adState = wideSkyscraperState,
             label = "AdSize.WIDE_SKYSCRAPER",
             preOccupySpace = true,
         )
@@ -72,12 +90,11 @@ fun BannersScreen() {
 
 
 fun LazyListScope.bannerItem(
-    adUnitId: String,
-    adSize: AdSize,
+    adState: AdMobBannerState,
     label: String,
     preOccupySpace: Boolean = false,
 ) {
-    item() {
+    item(key = label) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -86,14 +103,11 @@ fun LazyListScope.bannerItem(
             Text(text = label)
 
             AdMobBanner(
-                adUnitId = adUnitId,
-                adSize = adSize,
+                state = adState,
                 preOccupySpace = preOccupySpace,
             )
         }
     }
-
-
 }
 
 

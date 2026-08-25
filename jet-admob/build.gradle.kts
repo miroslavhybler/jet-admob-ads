@@ -8,7 +8,7 @@ android {
     group = "com.jet.admob"
     namespace = "com.jet.admob"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }
@@ -85,7 +85,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "com.jet"
             artifactId = "admob"
-            version = "1.0.0-beta01"
+            version = "1.0.0-beta02"
 
             afterEvaluate {
                 from(components["release"])

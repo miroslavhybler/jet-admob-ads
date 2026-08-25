@@ -33,7 +33,7 @@ To add this library to your project, follow these steps:
 
     ```kotlin
     dependencies {
-        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0-beta01")
+        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0-beta02")
     }
     ```
 
@@ -46,7 +46,7 @@ Create a banner state with `rememberAdMobBannerState`, then pass it to `AdMobBan
 ```kotlin
 val bannerState = rememberAdMobBannerState(
     adUnitId = "YOUR_AD_UNIT_ID",
-    adSize = AdSize.BANNER,
+    adSize = AdMobBannerState.BANNER,
 )
 
 AdMobBanner(
@@ -86,7 +86,7 @@ This keeps the loaded ad alive when Compose temporarily disposes off-screen list
 ```kotlin
 val bannerState = rememberAdMobBannerState(
     adUnitId = "YOUR_BANNER_AD_UNIT_ID",
-    adSize = AdSize.BANNER,
+    adSize = AdMobBannerState.BANNER,
 )
 val nativeAdState = rememberAdMobNativeAdState(
     adUnitId = "YOUR_NATIVE_AD_UNIT_ID",

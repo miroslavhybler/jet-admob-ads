@@ -2,6 +2,7 @@
 
 package com.jet.admob
 
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.background
@@ -58,6 +59,242 @@ class AdMobBannerState internal constructor(
 
     internal val isLoadedForInspection: Boolean
         get() = adView == null
+
+    companion object {
+
+        /**
+         * Constant that will cause the height of the ad to scale based on the height of the device
+         * in the current orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val AUTO_HEIGHT: Int = AdSize.AUTO_HEIGHT
+
+        /**
+         * Mobile Marketing Association banner ad size (320x50 dp).
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val BANNER: AdSize = AdSize.BANNER
+
+        /**
+         * A dynamically sized banner that matches its parent's width and changes height to match
+         * the loaded ad content.
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val FLUID: AdSize = AdSize.FLUID
+
+        /**
+         * Interactive Advertising Bureau full banner ad size (468x60 dp).
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val FULL_BANNER: AdSize = AdSize.FULL_BANNER
+
+        /**
+         * Constant that will cause the width of the ad to match the width of the device in the
+         * current orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val FULL_WIDTH: Int = AdSize.FULL_WIDTH
+
+        /**
+         * An invalid [AdSize] that will cause the ad request to fail immediately.
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val INVALID: AdSize = AdSize.INVALID
+
+        /**
+         * Large banner ad size (320x100 dp).
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val LARGE_BANNER: AdSize = AdSize.LARGE_BANNER
+
+        /**
+         * Interactive Advertising Bureau leaderboard ad size (728x90 dp).
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val LEADERBOARD: AdSize = AdSize.LEADERBOARD
+
+        /**
+         * Interactive Advertising Bureau medium rectangle ad size (300x250 dp).
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val MEDIUM_RECTANGLE: AdSize = AdSize.MEDIUM_RECTANGLE
+
+        /**
+         * IAB wide skyscraper ad size (160x600 dp).
+         *
+         * @since 1.0.0
+         */
+        @JvmField
+        val WIDE_SKYSCRAPER: AdSize = AdSize.WIDE_SKYSCRAPER
+
+        /**
+         * Smart banner ad size.
+         *
+         * @since 1.0.0
+         */
+        @Deprecated(
+            message = "Use getLargeAnchoredAdaptiveBannerAdSize instead.",
+            replaceWith = ReplaceWith(
+                expression = "AdMobBannerState.getLargeAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdMobBannerState"],
+            ),
+        )
+        @Suppress("DEPRECATION")
+        @JvmField
+        val SMART_BANNER: AdSize = AdSize.SMART_BANNER
+
+        /**
+         * Returns an inline adaptive banner [AdSize] with the given width and max height.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getInlineAdaptiveBannerAdSize(
+            width: Int,
+            maxHeight: Int,
+        ): AdSize = AdSize.getInlineAdaptiveBannerAdSize(width, maxHeight)
+
+        /**
+         * Returns an inline adaptive banner [AdSize] for the current orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getCurrentOrientationInlineAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns an inline adaptive banner [AdSize] for landscape orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getLandscapeInlineAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getLandscapeInlineAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns an inline adaptive banner [AdSize] for portrait orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getPortraitInlineAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getPortraitInlineAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns a large anchored adaptive banner [AdSize] for the current orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getLargeAnchoredAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns a large anchored adaptive banner [AdSize] for landscape orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getLargeLandscapeAnchoredAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns a large anchored adaptive banner [AdSize] for portrait orientation.
+         *
+         * @since 1.0.0
+         */
+        @JvmStatic
+        fun getLargePortraitAnchoredAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getLargePortraitAnchoredAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns an anchored adaptive banner [AdSize] for the current orientation.
+         *
+         * @since 1.0.0
+         */
+        @Deprecated(
+            message = "Use getLargeAnchoredAdaptiveBannerAdSize instead.",
+            replaceWith = ReplaceWith(
+                expression = "AdMobBannerState.getLargeAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdMobBannerState"],
+            ),
+        )
+        @Suppress("DEPRECATION")
+        @JvmStatic
+        fun getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns an anchored adaptive banner [AdSize] for landscape orientation.
+         *
+         * @since 1.0.0
+         */
+        @Deprecated(
+            message = "Use getLargeLandscapeAnchoredAdaptiveBannerAdSize instead.",
+            replaceWith = ReplaceWith(
+                expression = "AdMobBannerState.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdMobBannerState"],
+            ),
+        )
+        @Suppress("DEPRECATION")
+        @JvmStatic
+        fun getLandscapeAnchoredAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getLandscapeAnchoredAdaptiveBannerAdSize(context, width)
+
+        /**
+         * Returns an anchored adaptive banner [AdSize] for portrait orientation.
+         *
+         * @since 1.0.0
+         */
+        @Deprecated(
+            message = "Use getLargePortraitAnchoredAdaptiveBannerAdSize instead.",
+            replaceWith = ReplaceWith(
+                expression = "AdMobBannerState.getLargePortraitAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdMobBannerState"],
+            ),
+        )
+        @Suppress("DEPRECATION")
+        @JvmStatic
+        fun getPortraitAnchoredAdaptiveBannerAdSize(
+            context: Context,
+            width: Int,
+        ): AdSize = AdSize.getPortraitAnchoredAdaptiveBannerAdSize(context, width)
+    }
 
     /**
      * Loads the banner ad if it is not already loaded or loading.
@@ -243,7 +480,7 @@ fun rememberAdMobBannerState(
 )
 @JetAdMobAlpha
 @Composable
-fun AdMobBanner(
+private fun AdMobBanner(
     modifier: Modifier = Modifier,
     adUnitId: String,
     adSize: AdSize,

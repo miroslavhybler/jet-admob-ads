@@ -1,16 +1,19 @@
+@file:OptIn(JetAdMobAlpha::class)
+
 package com.jet.admob.example.screens
 
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.google.android.gms.ads.AdSize
 import com.jet.admob.AdMobAdsUtil
+import com.jet.admob.AdMobBannerState
+import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
+import com.jet.admob.rememberAdMobBannerState
 
 
 /**
@@ -24,47 +27,47 @@ fun AdaptiveBannersScreen() {
     val screenWidth = LocalResources.current.displayMetrics.widthPixels
     val screenWidthDp = (screenWidth / density.density).toInt()
 
-    val landscapeAnchoredAdSize = remember {
-        AdSize.getLandscapeAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+    val landscapeAnchoredAdSize = remember(context, screenWidthDp) {
+        AdMobBannerState.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
     }
 
-    val portraitAnchoredAdSize = remember {
-        AdSize.getPortraitAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+    val portraitAnchoredAdSize = remember(context, screenWidthDp) {
+        AdMobBannerState.getLargePortraitAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
     }
 
-    val inlineAdaptiveAdSize = remember {
-        AdSize.getInlineAdaptiveBannerAdSize(screenWidthDp, 128)
+    val inlineAdaptiveAdSize = remember(screenWidthDp) {
+        AdMobBannerState.getInlineAdaptiveBannerAdSize(screenWidthDp, 128)
     }
+
+    val landscapeAnchoredAdState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
+        adSize = landscapeAnchoredAdSize,
+    )
+    val portraitAnchoredAdState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
+        adSize = portraitAnchoredAdSize,
+    )
+    val inlineAdaptiveAdState = rememberAdMobBannerState(
+        adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
+        adSize = inlineAdaptiveAdSize,
+    )
 
     LazyColumnScreen(
         title = "Adaptive Banners",
     ) {
-        //This is just for this example simplification, try not to use ads in lazyColumn
         bannerItem(
-            adSize = landscapeAnchoredAdSize,
-            label = "getLandscapeAnchoredAdaptiveBannerAdSize()",
+            adState = landscapeAnchoredAdState,
+            label = "getLargeLandscapeAnchoredAdaptiveBannerAdSize(): $landscapeAnchoredAdSize",
         )
         bannerItem(
-            adSize = portraitAnchoredAdSize,
-            label = "portraitAnchoredAdSize()",
+            adState = portraitAnchoredAdState,
+            label = "getLargePortraitAnchoredAdaptiveBannerAdSize(): $portraitAnchoredAdSize",
         )
         bannerItem(
-            adSize = inlineAdaptiveAdSize,
-            label = "inlineAdaptiveAdSize()",
+            adState = inlineAdaptiveAdState,
+            label = "getInlineAdaptiveBannerAdSize(): $inlineAdaptiveAdSize",
         )
     }
-}
-
-private fun LazyListScope.bannerItem(
-    adSize: AdSize,
-    label: String,
-) {
-
-    bannerItem(
-        adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
-        adSize = adSize,
-        label = "$label: $adSize"
-    )
 }
 
 @Composable
