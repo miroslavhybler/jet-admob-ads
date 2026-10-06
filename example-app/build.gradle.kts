@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.jet.admob.example"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -46,6 +46,7 @@ dependencies {
 
     /** Default dependencies for Jetpack Compose project */
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))

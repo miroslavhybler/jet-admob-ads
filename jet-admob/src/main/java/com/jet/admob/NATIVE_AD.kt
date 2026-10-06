@@ -53,7 +53,6 @@ import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
-import com.google.android.material.button.MaterialButton
 import com.jet.admob.annotations.JetAdMobAlpha
 import kotlin.random.Random
 
@@ -307,8 +306,8 @@ object NativeAdDefaults {
      */
     @Composable
     fun colors(
-        containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-        contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+        containerColor: Color = MaterialTheme.colorScheme.surface,
+        contentColor: Color = MaterialTheme.colorScheme.onSurface,
         buttonColor: Color = MaterialTheme.colorScheme.primary,
         buttonTextColor: Color = MaterialTheme.colorScheme.onPrimary,
     ): NativeAdColors {
@@ -371,19 +370,9 @@ object NativeAdDefaults {
  * @param contentPadding The padding to be applied to the content of the ad, inside the container.
  * @since 1.0.0
  */
-@Deprecated(
-    message = "This overload will become private soon. Use rememberAdMobNativeAdState() and AdMobNative(state = ...) instead.",
-    replaceWith = ReplaceWith(
-        expression = "AdMobNative(modifier = modifier, state = rememberAdMobNativeAdState(adUnitId = adUnitId, loadAdRequest = loadAdRequest, adListener = adListener), adFormat = adFormat, shape = shape, buttonShape = buttonShape, colors = colors, contentPadding = contentPadding)",
-        imports = [
-            "com.jet.admob.AdMobNative",
-            "com.jet.admob.rememberAdMobNativeAdState",
-        ],
-    ),
-)
 @JetAdMobAlpha
 @Composable
-fun AdMobNative(
+private fun AdMobNative(
     modifier: Modifier = Modifier,
     adUnitId: String,
     loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
@@ -500,7 +489,7 @@ private fun AdMobNativeImpl(
 
                     val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
                     val bodyView = adView.findViewById<TextView>(R.id.ad_body)
-                    val callToActionView = adView.findViewById<MaterialButton>(R.id.ad_call_to_action)
+                    val callToActionView = adView.findViewById<TextView>(R.id.ad_call_to_action)
                     val iconView = adView.findViewById<ImageView>(R.id.ad_icon)
                     val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
                     val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
@@ -593,7 +582,7 @@ private fun AdMobNativePreview(
 
             val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
             val bodyView = adView.findViewById<TextView>(R.id.ad_body)
-            val callToActionView = adView.findViewById<MaterialButton>(R.id.ad_call_to_action)
+            val callToActionView = adView.findViewById<TextView>(R.id.ad_call_to_action)
             val iconView = adView.findViewById<ImageView>(R.id.ad_icon)
             val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
             val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
@@ -710,35 +699,22 @@ private fun applyShapeAndColor(
             density = density,
         )
 
-        if (view is MaterialButton) {
-            view.backgroundTintList = ColorStateList.valueOf(color.toArgb())
-            if (outline is Outline.Rounded) {
-                val roundRect = outline.roundRect
-                view.shapeAppearanceModel = view.shapeAppearanceModel.toBuilder()
-                    .setTopLeftCornerSize(roundRect.topLeftCornerRadius.x)
-                    .setTopRightCornerSize(roundRect.topRightCornerRadius.x)
-                    .setBottomRightCornerSize(roundRect.bottomRightCornerRadius.x)
-                    .setBottomLeftCornerSize(roundRect.bottomLeftCornerRadius.x)
-                    .build()
-            }
-        } else {
-            val background = GradientDrawable()
-            background.color = ColorStateList.valueOf(color.toArgb())
-            if (outline is Outline.Rounded) {
-                val roundRect = outline.roundRect
-                background.cornerRadii = floatArrayOf(
-                    roundRect.topLeftCornerRadius.x,
-                    roundRect.topLeftCornerRadius.y,
-                    roundRect.topRightCornerRadius.x,
-                    roundRect.topRightCornerRadius.y,
-                    roundRect.bottomRightCornerRadius.x,
-                    roundRect.bottomRightCornerRadius.y,
-                    roundRect.bottomLeftCornerRadius.x,
-                    roundRect.bottomLeftCornerRadius.y
-                )
-            }
-            view.background = background
+        val background = GradientDrawable()
+        background.color = ColorStateList.valueOf(color.toArgb())
+        if (outline is Outline.Rounded) {
+            val roundRect = outline.roundRect
+            background.cornerRadii = floatArrayOf(
+                roundRect.topLeftCornerRadius.x,
+                roundRect.topLeftCornerRadius.y,
+                roundRect.topRightCornerRadius.x,
+                roundRect.topRightCornerRadius.y,
+                roundRect.bottomRightCornerRadius.x,
+                roundRect.bottomRightCornerRadius.y,
+                roundRect.bottomLeftCornerRadius.x,
+                roundRect.bottomLeftCornerRadius.y
+            )
         }
+        view.background = background
     }
 }
 

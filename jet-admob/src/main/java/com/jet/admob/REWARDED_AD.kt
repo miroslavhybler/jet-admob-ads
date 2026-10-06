@@ -1,3 +1,5 @@
+@file:Suppress("RedundantVisibilityModifier")
+
 package com.jet.admob
 
 import android.app.Activity
@@ -28,7 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @JetAdMobAlpha
 @Immutable
-class AdMobRewardedAdState constructor(
+public class AdMobRewardedAdState internal constructor(
     val adUnitId: String,
     val onUserEarnedReward: () -> Unit
 ) {
@@ -119,7 +121,7 @@ class AdMobRewardedAdState constructor(
  * @since 1.0.0
  */
 @Composable
-fun rememberAdMobRewardedAdState(
+public fun rememberAdMobRewardedAdState(
     adUnitId: String,
     onUserEarnedReward: () -> Unit
 ): AdMobRewardedAdState {

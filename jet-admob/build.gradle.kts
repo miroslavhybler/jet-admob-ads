@@ -71,7 +71,6 @@ dependencies {
     implementation(libs.play.services.ads.api)
 
     /** XML for Native ads */
-    implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
 
 

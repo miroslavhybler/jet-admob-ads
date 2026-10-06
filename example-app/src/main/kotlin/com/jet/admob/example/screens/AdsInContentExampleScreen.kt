@@ -13,7 +13,6 @@ import com.google.android.gms.ads.AdSize
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobBanner
 import com.jet.admob.AdMobNative
-import com.jet.admob.NativeAdColors
 import com.jet.admob.NativeAdFormat
 import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
@@ -68,12 +67,6 @@ fun AdsInContentExampleScreen() {
                 modifier = Modifier.padding(horizontal = 20.dp),
                 state = nativeAdState,
                 adFormat = NativeAdFormat.Medium,
-                colors = NativeAdColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    buttonColor = MaterialTheme.colorScheme.primary,
-                    buttonTextColor = MaterialTheme.colorScheme.onPrimary,
-                ),
             )
         }
 

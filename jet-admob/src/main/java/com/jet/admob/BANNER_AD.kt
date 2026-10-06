@@ -151,11 +151,7 @@ class AdMobBannerState internal constructor(
          * @since 1.0.0
          */
         @Deprecated(
-            message = "Use getLargeAnchoredAdaptiveBannerAdSize instead.",
-            replaceWith = ReplaceWith(
-                expression = "AdMobBannerState.getLargeAnchoredAdaptiveBannerAdSize(context, width)",
-                imports = ["com.jet.admob.AdMobBannerState"],
-            ),
+            message = "Use an adaptive banner size such as getLargeAnchoredAdaptiveBannerAdSize(context, width) instead.",
         )
         @Suppress("DEPRECATION")
         @JvmField
@@ -468,16 +464,6 @@ fun rememberAdMobBannerState(
  * created on 06.01.2026
  * @since 1.0.0
  */
-@Deprecated(
-    message = "This overload will become private soon. Use rememberAdMobBannerState() and AdMobBanner(state = ...) instead.",
-    replaceWith = ReplaceWith(
-        expression = "AdMobBanner(modifier = modifier, state = rememberAdMobBannerState(adUnitId = adUnitId, adSize = adSize, loadAdRequest = loadAdRequest, adListener = adListener), preOccupySpace = preOccupySpace)",
-        imports = [
-            "com.jet.admob.AdMobBanner",
-            "com.jet.admob.rememberAdMobBannerState",
-        ],
-    ),
-)
 @JetAdMobAlpha
 @Composable
 private fun AdMobBanner(

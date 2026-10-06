@@ -1,17 +1,19 @@
+@file:OptIn(JetAdMobAlpha::class)
+
 package com.jet.admob.example.screens
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobNative
-import com.jet.admob.NativeAdColors
 import com.jet.admob.NativeAdFormat
+import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
+import com.jet.admob.rememberAdMobNativeAdState
 
 
 /**
@@ -21,27 +23,28 @@ import com.jet.admob.example.LazyColumnScreen
  */
 @Composable
 fun NativeAdsScreen() {
+    val smallNativeAdState = rememberAdMobNativeAdState(
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+    )
+    val mediumNativeAdState = rememberAdMobNativeAdState(
+        adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+    )
+
     LazyColumnScreen(
         title = "Native ads"
     ) {
 
         item {
             AdMobNative(
-                adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+                state = smallNativeAdState,
                 adFormat = NativeAdFormat.Small,
-                colors = NativeAdColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    buttonColor = MaterialTheme.colorScheme.primary,
-                    buttonTextColor = MaterialTheme.colorScheme.onPrimary
-                )
             )
         }
 
         item {
             AdMobNative(
                 modifier = Modifier.padding(horizontal = 20.dp),
-                adUnitId = AdMobAdsUtil.TestIds.NATIVE,
+                state = mediumNativeAdState,
                 adFormat = NativeAdFormat.Medium,
             )
         }
