@@ -44,9 +44,11 @@ public class AdMobRewardedAdState internal constructor(
      *
      * @param context The context to use for loading the ad.
      */
-    fun load(context: Context) {
+    fun load(
+        context: Context,
+        adRequest: AdRequest = AdRequest.Builder().build(),
+    ) {
         mAdStatus.value = AdStatus.Loading
-        val adRequest = AdRequest.Builder().build()
         RewardedAd.load(
             context,
             adUnitId,

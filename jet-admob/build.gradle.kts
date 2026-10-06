@@ -84,7 +84,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "com.jet"
             artifactId = "admob"
-            version = "1.0.0-beta02"
+            version = "1.0.0"
 
             afterEvaluate {
                 from(components["release"])
