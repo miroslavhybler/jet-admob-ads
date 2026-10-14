@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.jet.admob
 
 import android.app.Activity
@@ -30,6 +32,7 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobInterstitialAdState constructor(
     private val context: Context,
     private val adUnitId: String,
@@ -53,6 +56,7 @@ class AdMobInterstitialAdState constructor(
      * Holds the [LoadAdError] if the last ad request failed. `Null` otherwise.
      * @since 1.0.0
      */
+    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     var adError: LoadAdError? by mutableStateOf(value = null)
         private set
 
@@ -150,6 +154,7 @@ class AdMobInterstitialAdState constructor(
  * Represents the presentation state of an interstitial ad.
  * @since 1.0.0
  */
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 sealed interface AdPresentationState {
 
     /**
@@ -174,6 +179,7 @@ sealed interface AdPresentationState {
      * The ad failed to show.
      * @since 1.0.0
      */
+    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     class FailedToShow constructor(
         val error: AdError,
     ) : AdPresentationState
@@ -192,6 +198,7 @@ sealed interface AdPresentationState {
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobInterstitialAdState(
     adUnitId: String,

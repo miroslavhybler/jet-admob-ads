@@ -1,4 +1,4 @@
-@file:Suppress("OPT_IN_USAGE")
+@file:Suppress("OPT_IN_USAGE", "DEPRECATION")
 
 package com.jet.admob
 
@@ -101,6 +101,7 @@ data class NativeAdColors(
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobNativeAdState internal constructor(
     private val context: Context?,
     val adUnitId: String,
@@ -125,6 +126,7 @@ class AdMobNativeAdState internal constructor(
      * @param adListener An [AdListener] for observing ad events.
      * @since 1.0.0
      */
+    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     fun loadAd(
         loadAdRequest: () -> AdRequest = this.loadAdRequest,
         adListener: AdListener? = this.adListener,
@@ -188,6 +190,7 @@ class AdMobNativeAdState internal constructor(
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobNativeAdState(
     adUnitId: String,
@@ -417,6 +420,7 @@ private fun AdMobNative(
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun AdMobNative(
     modifier: Modifier = Modifier,

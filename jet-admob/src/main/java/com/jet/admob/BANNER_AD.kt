@@ -1,4 +1,4 @@
-@file:Suppress("OPT_IN_USAGE")
+@file:Suppress("OPT_IN_USAGE", "DEPRECATION")
 
 package com.jet.admob
 
@@ -45,8 +45,10 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobBannerState internal constructor(
     val adUnitId: String,
+    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     val adSize: AdSize,
     private val adView: AdView?,
     private var loadAdRequest: () -> AdRequest,
@@ -68,6 +70,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val AUTO_HEIGHT: Int = AdSize.AUTO_HEIGHT
 
@@ -76,6 +79,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val BANNER: AdSize = AdSize.BANNER
 
@@ -85,6 +89,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val FLUID: AdSize = AdSize.FLUID
 
@@ -93,6 +98,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val FULL_BANNER: AdSize = AdSize.FULL_BANNER
 
@@ -102,6 +108,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val FULL_WIDTH: Int = AdSize.FULL_WIDTH
 
@@ -110,6 +117,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val INVALID: AdSize = AdSize.INVALID
 
@@ -118,6 +126,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val LARGE_BANNER: AdSize = AdSize.LARGE_BANNER
 
@@ -126,6 +135,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val LEADERBOARD: AdSize = AdSize.LEADERBOARD
 
@@ -134,6 +144,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val MEDIUM_RECTANGLE: AdSize = AdSize.MEDIUM_RECTANGLE
 
@@ -142,6 +153,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val WIDE_SKYSCRAPER: AdSize = AdSize.WIDE_SKYSCRAPER
 
@@ -151,7 +163,7 @@ class AdMobBannerState internal constructor(
          * @since 1.0.0
          */
         @Deprecated(
-            message = "Use an adaptive banner size such as getLargeAnchoredAdaptiveBannerAdSize(context, width) instead.",
+            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
         )
         @Suppress("DEPRECATION")
         @JvmField
@@ -162,6 +174,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getInlineAdaptiveBannerAdSize(
             width: Int,
@@ -173,6 +186,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getCurrentOrientationInlineAdaptiveBannerAdSize(
             context: Context,
@@ -184,6 +198,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLandscapeInlineAdaptiveBannerAdSize(
             context: Context,
@@ -195,6 +210,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getPortraitInlineAdaptiveBannerAdSize(
             context: Context,
@@ -206,6 +222,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLargeAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -217,6 +234,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLargeLandscapeAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -228,6 +246,7 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLargePortraitAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -240,11 +259,7 @@ class AdMobBannerState internal constructor(
          * @since 1.0.0
          */
         @Deprecated(
-            message = "Use getLargeAnchoredAdaptiveBannerAdSize instead.",
-            replaceWith = ReplaceWith(
-                expression = "AdMobBannerState.getLargeAnchoredAdaptiveBannerAdSize(context, width)",
-                imports = ["com.jet.admob.AdMobBannerState"],
-            ),
+            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
         )
         @Suppress("DEPRECATION")
         @JvmStatic
@@ -259,11 +274,7 @@ class AdMobBannerState internal constructor(
          * @since 1.0.0
          */
         @Deprecated(
-            message = "Use getLargeLandscapeAnchoredAdaptiveBannerAdSize instead.",
-            replaceWith = ReplaceWith(
-                expression = "AdMobBannerState.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, width)",
-                imports = ["com.jet.admob.AdMobBannerState"],
-            ),
+            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
         )
         @Suppress("DEPRECATION")
         @JvmStatic
@@ -278,11 +289,7 @@ class AdMobBannerState internal constructor(
          * @since 1.0.0
          */
         @Deprecated(
-            message = "Use getLargePortraitAnchoredAdaptiveBannerAdSize instead.",
-            replaceWith = ReplaceWith(
-                expression = "AdMobBannerState.getLargePortraitAnchoredAdaptiveBannerAdSize(context, width)",
-                imports = ["com.jet.admob.AdMobBannerState"],
-            ),
+            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
         )
         @Suppress("DEPRECATION")
         @JvmStatic
@@ -299,6 +306,7 @@ class AdMobBannerState internal constructor(
      * @param adListener An [AdListener] for observing ad events.
      * @since 1.0.0
      */
+    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     fun loadAd(
         loadAdRequest: () -> AdRequest = this.loadAdRequest,
         adListener: AdListener? = this.adListener,
@@ -390,6 +398,7 @@ class AdMobBannerState internal constructor(
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobBannerState(
     adUnitId: String,
@@ -501,6 +510,7 @@ private fun AdMobBanner(
  * @since 1.0.0
  */
 @JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun AdMobBanner(
     modifier: Modifier = Modifier,

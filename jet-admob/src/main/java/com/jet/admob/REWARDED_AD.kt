@@ -1,4 +1,4 @@
-@file:Suppress("RedundantVisibilityModifier")
+@file:Suppress("RedundantVisibilityModifier", "DEPRECATION", "OPT_IN_USAGE")
 
 package com.jet.admob
 
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @JetAdMobAlpha
 @Immutable
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 public class AdMobRewardedAdState internal constructor(
     val adUnitId: String,
     val onUserEarnedReward: () -> Unit
@@ -44,6 +45,7 @@ public class AdMobRewardedAdState internal constructor(
      *
      * @param context The context to use for loading the ad.
      */
+    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     fun load(
         context: Context,
         adRequest: AdRequest = AdRequest.Builder().build(),
@@ -123,6 +125,7 @@ public class AdMobRewardedAdState internal constructor(
  * @since 1.0.0
  */
 @Composable
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 public fun rememberAdMobRewardedAdState(
     adUnitId: String,
     onUserEarnedReward: () -> Unit
