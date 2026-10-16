@@ -52,9 +52,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
 
-    /** Google AdMod Ads SDK */
-    implementation(libs.play.services.ads)
-
+    /** Google AdMob Ads SDK */
+    implementation(libs.ads.mobile.sdk)
 
     /** Navigation 3 */
     implementation( libs.navigation3.adaptive)

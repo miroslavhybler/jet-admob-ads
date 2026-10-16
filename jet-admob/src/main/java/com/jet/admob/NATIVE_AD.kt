@@ -1,4 +1,4 @@
-@file:Suppress("OPT_IN_USAGE", "DEPRECATION")
+@file:Suppress("OPT_IN_USAGE")
 
 package com.jet.admob
 
@@ -45,14 +45,17 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.nativead.MediaView
-import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdOptions
-import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.libraries.ads.mobile.sdk.common.AdChoicesPlacement
+import com.google.android.libraries.ads.mobile.sdk.common.AdValue
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.nativead.MediaView
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAd
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdEventCallback
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdLoader
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdLoaderCallback
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdRequest
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdView
 import com.jet.admob.annotations.JetAdMobAlpha
 import kotlin.random.Random
 
@@ -101,12 +104,11 @@ data class NativeAdColors(
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobNativeAdState internal constructor(
     private val context: Context?,
     val adUnitId: String,
-    private var loadAdRequest: () -> AdRequest,
-    private var adListener: AdListener?,
+    private var loadAdRequest: () -> NativeAdRequest,
+    private var adListener: AdMobAdListener?,
 ) {
 
     internal var nativeAd: NativeAd? by mutableStateOf(value = null)
@@ -122,43 +124,69 @@ class AdMobNativeAdState internal constructor(
     /**
      * Loads the native ad if it is not already loaded or loading.
      *
-     * @param loadAdRequest A lambda that returns an [AdRequest].
-     * @param adListener An [AdListener] for observing ad events.
+     * @param loadAdRequest A lambda that returns a [NativeAdRequest].
+     * @param adListener An [AdMobAdListener] for observing ad events.
      * @since 1.0.0
      */
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     fun loadAd(
-        loadAdRequest: () -> AdRequest = this.loadAdRequest,
-        adListener: AdListener? = this.adListener,
+        loadAdRequest: () -> NativeAdRequest = this.loadAdRequest,
+        adListener: AdMobAdListener? = this.adListener,
     ) {
-        val context = context ?: return
-        if (isLoading || nativeAd != null || isDestroyed) return
+        runOnMainThread {
+            this.loadAdRequest = loadAdRequest
+            this.adListener = adListener
 
-        isLoading = true
-        loadNativeAd(
-            context = context,
-            adUnitId = adUnitId,
-            loadAdRequest = loadAdRequest,
-            adListener = adListener,
-        ) { ad ->
-            isLoading = false
-            if (isDestroyed) {
-                ad?.destroy()
-                return@loadNativeAd
+            if (context == null || isLoading || nativeAd != null || isDestroyed) {
+                return@runOnMainThread
             }
 
-            val previousAd = nativeAd
-            nativeAd = ad
-            previousAd?.destroy()
+            isLoading = true
+            NativeAdLoader.load(
+                loadAdRequest(),
+                object : NativeAdLoaderCallback {
+                    override fun onNativeAdLoaded(nativeAd: NativeAd) {
+                        runOnMainThread {
+                            if (isDestroyed) {
+                                nativeAd.destroy()
+                                return@runOnMainThread
+                            }
+
+                            nativeAd.adEventCallback = createNativeAdEventCallback(nativeAd)
+                            isLoading = false
+                            val previousAd = this@AdMobNativeAdState.nativeAd
+                            destroyCachedViews()
+                            this@AdMobNativeAdState.nativeAd = nativeAd
+                            if (previousAd !== nativeAd) {
+                                previousAd?.destroy()
+                            }
+                            this@AdMobNativeAdState.adListener?.onAdLoaded()
+                        }
+                    }
+
+                    override fun onAdFailedToLoad(adError: LoadAdError) {
+                        runOnMainThread {
+                            if (isDestroyed) return@runOnMainThread
+                            isLoading = false
+                            Log.e(
+                                "NATIVE_AD",
+                                "Failed to load native ad: ${adError.message}",
+                            )
+                            this@AdMobNativeAdState.adListener?.onAdFailedToLoad(adError)
+                        }
+                    }
+                },
+            )
         }
     }
 
     internal fun updateLoadOptions(
-        loadAdRequest: () -> AdRequest,
-        adListener: AdListener?,
+        loadAdRequest: () -> NativeAdRequest,
+        adListener: AdMobAdListener?,
     ) {
-        this.loadAdRequest = loadAdRequest
-        this.adListener = adListener
+        runOnMainThread {
+            this.loadAdRequest = loadAdRequest
+            this.adListener = adListener
+        }
     }
 
     internal fun getNativeAdView(adFormat: NativeAdFormat): NativeAdView? {
@@ -171,9 +199,72 @@ class AdMobNativeAdState internal constructor(
     }
 
     internal fun destroy() {
-        isDestroyed = true
-        nativeAd?.destroy()
-        nativeAd = null
+        runOnMainThread {
+            if (isDestroyed) return@runOnMainThread
+            isDestroyed = true
+            isLoading = false
+            destroyCachedViews()
+            nativeAd?.destroy()
+            nativeAd = null
+        }
+    }
+
+    private fun createNativeAdEventCallback(ad: NativeAd): NativeAdEventCallback {
+        return object : NativeAdEventCallback {
+            override fun onAdClicked() {
+                notifyListener(ad) { it.onAdClicked() }
+            }
+
+            override fun onAdDismissedFullScreenContent() {
+                notifyListener(ad) { it.onAdDismissedFullScreenContent() }
+            }
+
+            override fun onAdFailedToShowFullScreenContent(
+                fullScreenContentError: FullScreenContentError,
+            ) {
+                notifyListener(ad) {
+                    it.onAdFailedToShowFullScreenContent(fullScreenContentError)
+                }
+            }
+
+            override fun onAdImpression() {
+                notifyListener(ad) { it.onAdImpression() }
+            }
+
+            override fun onAdPaid(value: AdValue) {
+                notifyListener(ad) { it.onAdPaid(value) }
+            }
+
+            override fun onAdShowedFullScreenContent() {
+                notifyListener(ad) { it.onAdShowedFullScreenContent() }
+            }
+
+            override fun onAdSwipeGestureClicked() {
+                notifyListener(ad) { it.onAdSwipeGestureClicked() }
+            }
+
+            override fun onCustomMuteThisAdReported() {
+                notifyListener(ad) { it.onCustomMuteThisAdReported() }
+            }
+        }
+    }
+
+    private fun notifyListener(
+        ad: NativeAd,
+        callback: (AdMobAdListener) -> Unit,
+    ) {
+        runOnMainThread {
+            if (!isDestroyed && nativeAd === ad) {
+                adListener?.let(callback)
+            }
+        }
+    }
+
+    private fun destroyCachedViews() {
+        nativeAdViews.values.toList().forEach { adView ->
+            (adView.parent as? ViewGroup)?.removeView(adView)
+            adView.destroy()
+        }
         nativeAdViews.clear()
     }
 }
@@ -185,17 +276,16 @@ class AdMobNativeAdState internal constructor(
  * Hoist this above lazy list items if the native ad is displayed inside a `LazyColumn`/`LazyRow`.
  *
  * @param adUnitId The ad unit ID for this native ad.
- * @param loadAdRequest A lambda that returns an [AdRequest].
- * @param adListener An [AdListener] for observing ad events.
+ * @param loadAdRequest A lambda that returns a [NativeAdRequest].
+ * @param adListener An [AdMobAdListener] for observing ad events.
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobNativeAdState(
     adUnitId: String,
-    loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
-    adListener: AdListener? = null,
+    loadAdRequest: () -> NativeAdRequest = { defaultNativeAdRequest(adUnitId) },
+    adListener: AdMobAdListener? = null,
 ): AdMobNativeAdState {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
@@ -233,60 +323,14 @@ fun rememberAdMobNativeAdState(
 }
 
 
-// Loads a native ad from AdMob.
-private fun loadNativeAd(
-    context: Context,
+private fun defaultNativeAdRequest(
     adUnitId: String,
-    loadAdRequest: () -> AdRequest,
-    adListener: AdListener?,
-    callback: (NativeAd?) -> Unit,
-) {
-    val builder = AdLoader.Builder(context, adUnitId)
-        .forNativeAd { nativeAd ->
-            callback(nativeAd)
-        }
-
-    val adLoader = builder
-        .withAdListener(object : AdListener() {
-            override fun onAdClicked() {
-                adListener?.onAdClicked()
-            }
-
-            override fun onAdClosed() {
-                adListener?.onAdClosed()
-            }
-
-            override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.e("NATIVE_AD", "Failed to load native ad: ${adError.message}")
-                adListener?.onAdFailedToLoad(adError)
-                callback(null)
-            }
-
-            override fun onAdImpression() {
-                adListener?.onAdImpression()
-            }
-
-            override fun onAdLoaded() {
-                adListener?.onAdLoaded()
-            }
-
-            override fun onAdOpened() {
-                adListener?.onAdOpened()
-            }
-
-            override fun onAdSwipeGestureClicked() {
-                adListener?.onAdSwipeGestureClicked()
-            }
-        })
-        .withNativeAdOptions(
-            NativeAdOptions.Builder()
-                .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
-                .build()
-        )
-        .build()
-
-    adLoader.loadAd(loadAdRequest())
-}
+): NativeAdRequest = NativeAdRequest.Builder(
+    adUnitId,
+    listOf(NativeAd.NativeAdType.NATIVE),
+)
+    .setAdChoicesPlacement(AdChoicesPlacement.TOP_RIGHT)
+    .build()
 
 
 private fun nativeAdLayout(adFormat: NativeAdFormat): Int {
@@ -359,12 +403,12 @@ object NativeAdDefaults {
  * This composable uses an XML-based approach for laying out the ad assets. This is the recommended
  * method to ensure full compliance with AdMob policies, as it allows the SDK to correctly register
  * and track each individual view (like the headline, icon, and call-to-action button). For more
- * details on this requirement, see the [official AdMob documentation](https://developers.google.com/admob/android/native/advanced).
+ * details on this requirement, see the [official AdMob documentation](https://developers.google.com/admob/android/next-gen/native/advanced).
  *
  * @param modifier The modifier to be applied to the ad container.
- * @param adUnitId The ad unit ID for this native ad. See [Test ads](https://developers.google.com/admob/android/test-ads) for test ad unit IDs.
- * @param loadAdRequest A lambda that returns an [AdRequest]. Defaults to a new [AdRequest.Builder().build()].
- * @param adListener An [AdListener] for observing ad events.
+ * @param adUnitId The ad unit ID for this native ad. See [Test ads](https://developers.google.com/admob/android/next-gen/test-ads) for test ad unit IDs.
+ * @param loadAdRequest A lambda that returns a [NativeAdRequest].
+ * @param adListener An [AdMobAdListener] for observing ad events.
  * @param adFormat The format of the native ad, which determines the underlying XML layout to be inflated. See [NativeAdFormat].
  * @param shape The shape of the ad container. Defaults to [RectangleShape].
  * @param buttonShape The shape to be applied to the call-to-action button. Defaults to [RectangleShape].
@@ -378,8 +422,8 @@ object NativeAdDefaults {
 private fun AdMobNative(
     modifier: Modifier = Modifier,
     adUnitId: String,
-    loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
-    adListener: AdListener? = null,
+    loadAdRequest: () -> NativeAdRequest = { defaultNativeAdRequest(adUnitId) },
+    adListener: AdMobAdListener? = null,
     adFormat: NativeAdFormat = NativeAdFormat.Small,
     shape: Shape = NativeAdDefaults.shape(format = adFormat),
     buttonShape: Shape = ButtonDefaults.shape,
@@ -420,7 +464,6 @@ private fun AdMobNative(
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun AdMobNative(
     modifier: Modifier = Modifier,
@@ -534,7 +577,6 @@ private fun AdMobNativeImpl(
                     } ?: run {
                         iconView.visibility = View.GONE
                     }
-                    mediaView?.mediaContent = nativeAd.mediaContent
                     advertiserView?.text = nativeAd.advertiser
                     starRatingView?.rating = nativeAd.starRating?.toFloat() ?: 0f
 
@@ -544,10 +586,10 @@ private fun AdMobNativeImpl(
                     adView.callToActionView = callToActionView
                     adView.advertiserView = advertiserView
                     adView.starRatingView = starRatingView
-                    adView.mediaView = mediaView
 
-                    // Set the native ad to the ad view
-                    adView.setNativeAd(nativeAd)
+                    // Registering the ad and media view enables SDK-managed impressions, clicks,
+                    // AdChoices, and media rendering.
+                    adView.registerNativeAd(nativeAd, mediaView)
                 }
             )
         }
@@ -588,7 +630,6 @@ private fun AdMobNativePreview(
             val bodyView = adView.findViewById<TextView>(R.id.ad_body)
             val callToActionView = adView.findViewById<TextView>(R.id.ad_call_to_action)
             val iconView = adView.findViewById<ImageView>(R.id.ad_icon)
-            val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
             val advertiserView = adView.findViewById<TextView>(R.id.ad_advertiser)
             val starRatingView = adView.findViewById<RatingBar>(R.id.ad_stars)
 
@@ -628,7 +669,6 @@ private fun AdMobNativePreview(
                 )
             )
             adView.iconView = iconView
-            //mediaView?.mediaContent = nativeAd.mediaContent
             advertiserView?.text = "Advertiser"
             starRatingView?.rating = Random.nextFloat()
                 .coerceIn(minimumValue = 0f, maximumValue = 5f)
@@ -639,7 +679,6 @@ private fun AdMobNativePreview(
             adView.callToActionView = callToActionView
             adView.advertiserView = advertiserView
             adView.starRatingView = starRatingView
-            adView.mediaView = mediaView
         }
     )
 }

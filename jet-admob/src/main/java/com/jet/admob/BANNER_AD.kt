@@ -27,12 +27,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.banner.AdSize
+import com.google.android.libraries.ads.mobile.sdk.banner.AdView
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdEventCallback
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRefreshCallback
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.AdValue
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
 import com.jet.admob.annotations.JetAdMobAlpha
 
 
@@ -45,14 +49,12 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobBannerState internal constructor(
     val adUnitId: String,
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     val adSize: AdSize,
     private val adView: AdView?,
-    private var loadAdRequest: () -> AdRequest,
-    private var adListener: AdListener?,
+    private var loadAdRequest: () -> BannerAdRequest,
+    private var adListener: AdMobAdListener?,
 ) {
 
     private var isLoading: Boolean = false
@@ -63,23 +65,11 @@ class AdMobBannerState internal constructor(
         get() = adView == null
 
     companion object {
-
-        /**
-         * Constant that will cause the height of the ad to scale based on the height of the device
-         * in the current orientation.
-         *
-         * @since 1.0.0
-         */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
-        @JvmField
-        val AUTO_HEIGHT: Int = AdSize.AUTO_HEIGHT
-
         /**
          * Mobile Marketing Association banner ad size (320x50 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val BANNER: AdSize = AdSize.BANNER
 
@@ -89,7 +79,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val FLUID: AdSize = AdSize.FLUID
 
@@ -98,35 +87,14 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val FULL_BANNER: AdSize = AdSize.FULL_BANNER
-
-        /**
-         * Constant that will cause the width of the ad to match the width of the device in the
-         * current orientation.
-         *
-         * @since 1.0.0
-         */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
-        @JvmField
-        val FULL_WIDTH: Int = AdSize.FULL_WIDTH
-
-        /**
-         * An invalid [AdSize] that will cause the ad request to fail immediately.
-         *
-         * @since 1.0.0
-         */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
-        @JvmField
-        val INVALID: AdSize = AdSize.INVALID
 
         /**
          * Large banner ad size (320x100 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val LARGE_BANNER: AdSize = AdSize.LARGE_BANNER
 
@@ -135,7 +103,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val LEADERBOARD: AdSize = AdSize.LEADERBOARD
 
@@ -144,7 +111,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
         val MEDIUM_RECTANGLE: AdSize = AdSize.MEDIUM_RECTANGLE
 
@@ -153,28 +119,14 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
-        val WIDE_SKYSCRAPER: AdSize = AdSize.WIDE_SKYSCRAPER
-
-        /**
-         * Smart banner ad size.
-         *
-         * @since 1.0.0
-         */
-        @Deprecated(
-            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
-        )
-        @Suppress("DEPRECATION")
-        @JvmField
-        val SMART_BANNER: AdSize = AdSize.SMART_BANNER
+        val WIDE_SKYSCRAPER: AdSize = AdSize(160, 600)
 
         /**
          * Returns an inline adaptive banner [AdSize] with the given width and max height.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getInlineAdaptiveBannerAdSize(
             width: Int,
@@ -186,7 +138,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getCurrentOrientationInlineAdaptiveBannerAdSize(
             context: Context,
@@ -198,7 +149,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLandscapeInlineAdaptiveBannerAdSize(
             context: Context,
@@ -210,7 +160,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getPortraitInlineAdaptiveBannerAdSize(
             context: Context,
@@ -222,7 +171,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLargeAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -234,7 +182,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLargeLandscapeAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -246,7 +193,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmStatic
         fun getLargePortraitAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -258,10 +204,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(
-            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
-        )
-        @Suppress("DEPRECATION")
         @JvmStatic
         fun getCurrentOrientationAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -273,10 +215,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(
-            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
-        )
-        @Suppress("DEPRECATION")
         @JvmStatic
         fun getLandscapeAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -288,10 +226,6 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(
-            message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
-        )
-        @Suppress("DEPRECATION")
         @JvmStatic
         fun getPortraitAnchoredAdaptiveBannerAdSize(
             context: Context,
@@ -302,23 +236,56 @@ class AdMobBannerState internal constructor(
     /**
      * Loads the banner ad if it is not already loaded or loading.
      *
-     * @param loadAdRequest A lambda that returns an [AdRequest].
-     * @param adListener An [AdListener] for observing ad events.
+     * @param loadAdRequest A lambda that returns a [BannerAdRequest].
+     * @param adListener An [AdMobAdListener] for observing ad events.
      * @since 1.0.0
      */
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     fun loadAd(
-        loadAdRequest: () -> AdRequest = this.loadAdRequest,
-        adListener: AdListener? = this.adListener,
+        loadAdRequest: () -> BannerAdRequest = this.loadAdRequest,
+        adListener: AdMobAdListener? = this.adListener,
     ) {
-        val adView = adView ?: return
-        if (isLoading || isLoaded || isDestroyed) return
+        runOnMainThread {
+            this.loadAdRequest = loadAdRequest
+            this.adListener = adListener
 
-        isLoading = true
-        this.loadAdRequest = loadAdRequest
-        this.adListener = adListener
-        updateAdListener(adListener = adListener)
-        adView.loadAd(loadAdRequest())
+            val adView = adView ?: return@runOnMainThread
+            if (isLoading || isLoaded || isDestroyed) return@runOnMainThread
+
+            isLoading = true
+            try {
+                adView.loadAd(
+                    loadAdRequest(),
+                    object : AdLoadCallback<BannerAd> {
+                        override fun onAdLoaded(ad: BannerAd) {
+                            ad.adEventCallback = createAdEventCallback()
+                            ad.bannerAdRefreshCallback = createAdRefreshCallback()
+
+                            runOnMainThread {
+                                if (isDestroyed) {
+                                    ad.destroy()
+                                    return@runOnMainThread
+                                }
+                                isLoading = false
+                                isLoaded = true
+                                this@AdMobBannerState.adListener?.onAdLoaded()
+                            }
+                        }
+
+                        override fun onAdFailedToLoad(adError: LoadAdError) {
+                            runOnMainThread {
+                                if (isDestroyed) return@runOnMainThread
+                                isLoading = false
+                                isLoaded = false
+                                this@AdMobBannerState.adListener?.onAdFailedToLoad(adError)
+                            }
+                        }
+                    },
+                )
+            } catch (error: Throwable) {
+                isLoading = false
+                throw error
+            }
+        }
     }
 
     internal fun getAdView(): AdView? {
@@ -327,61 +294,78 @@ class AdMobBannerState internal constructor(
     }
 
     internal fun updateLoadOptions(
-        loadAdRequest: () -> AdRequest,
-        adListener: AdListener?,
+        loadAdRequest: () -> BannerAdRequest,
+        adListener: AdMobAdListener?,
     ) {
         this.loadAdRequest = loadAdRequest
         this.adListener = adListener
-        updateAdListener(adListener = adListener)
     }
 
-    private fun updateAdListener(adListener: AdListener?) {
-        adView?.adListener = object : AdListener() {
+    private fun createAdEventCallback(): BannerAdEventCallback {
+        return object : BannerAdEventCallback {
             override fun onAdClicked() {
-                adListener?.onAdClicked()
+                notifyListener { it.onAdClicked() }
             }
 
-            override fun onAdClosed() {
-                adListener?.onAdClosed()
+            override fun onAdDismissedFullScreenContent() {
+                notifyListener { it.onAdDismissedFullScreenContent() }
             }
 
-            override fun onAdFailedToLoad(adError: LoadAdError) {
-                isLoading = false
-                isLoaded = false
-                adListener?.onAdFailedToLoad(adError)
+            override fun onAdFailedToShowFullScreenContent(
+                fullScreenContentError: FullScreenContentError,
+            ) {
+                notifyListener {
+                    it.onAdFailedToShowFullScreenContent(fullScreenContentError)
+                }
             }
 
             override fun onAdImpression() {
-                adListener?.onAdImpression()
+                notifyListener { it.onAdImpression() }
             }
 
-            override fun onAdLoaded() {
-                isLoading = false
-                isLoaded = true
-                adListener?.onAdLoaded()
+            override fun onAdPaid(value: AdValue) {
+                notifyListener { it.onAdPaid(value) }
             }
 
-            override fun onAdOpened() {
-                adListener?.onAdOpened()
+            override fun onAdShowedFullScreenContent() {
+                notifyListener { it.onAdShowedFullScreenContent() }
             }
 
-            override fun onAdSwipeGestureClicked() {
-                adListener?.onAdSwipeGestureClicked()
+            override fun onAppEvent(name: String, data: String?) {
+                notifyListener { it.onAppEvent(name, data) }
             }
         }
     }
 
-    internal fun resume() {
-        adView?.resume()
+    private fun createAdRefreshCallback(): BannerAdRefreshCallback {
+        return object : BannerAdRefreshCallback {
+            override fun onAdRefreshed() {
+                notifyListener { it.onAdRefreshed() }
+            }
+
+            override fun onAdFailedToRefresh(adError: LoadAdError) {
+                notifyListener { it.onAdFailedToRefresh(adError) }
+            }
+        }
     }
 
-    internal fun pause() {
-        adView?.pause()
+    private fun notifyListener(callback: (AdMobAdListener) -> Unit) {
+        runOnMainThread {
+            if (!isDestroyed) {
+                adListener?.let(callback)
+            }
+        }
     }
 
     internal fun destroy() {
-        isDestroyed = true
-        adView?.destroy()
+        runOnMainThread {
+            if (isDestroyed) return@runOnMainThread
+            isDestroyed = true
+            isLoading = false
+            isLoaded = false
+            (adView?.parent as? ViewGroup)?.removeView(adView)
+            adView?.destroy()
+        }
     }
 }
 
@@ -393,18 +377,19 @@ class AdMobBannerState internal constructor(
  *
  * @param adUnitId The ad unit ID for this banner ad.
  * @param adSize The size of the banner ad.
- * @param loadAdRequest A lambda that returns an [AdRequest].
- * @param adListener An [AdListener] for observing ad events.
+ * @param loadAdRequest A lambda that returns a [BannerAdRequest].
+ * @param adListener An [AdMobAdListener] for observing ad events.
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobBannerState(
     adUnitId: String,
     adSize: AdSize,
-    loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
-    adListener: AdListener? = null,
+    loadAdRequest: () -> BannerAdRequest = {
+        BannerAdRequest.Builder(adUnitId, adSize).build()
+    },
+    adListener: AdMobAdListener? = null,
 ): AdMobBannerState {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
@@ -420,8 +405,6 @@ fun rememberAdMobBannerState(
             } else {
                 AdView(context).apply {
                     id = View.generateViewId()
-                    this.adUnitId = adUnitId
-                    setAdSize(adSize)
                 }
             },
         )
@@ -459,14 +442,14 @@ fun rememberAdMobBannerState(
  * obscure the ad and/or the required AdChoices icon, leading to suspension of your
  * AdMob account.
  *
- * More info about Banner ads: [Banner ad overview](https://developers.google.com/admob/android/banner)
- * [AdSize docs](https://developers.google.com/admob/android/reference/com/google/android/gms/ads/AdSize)
+ * More info about Banner ads: [Banner ad overview](https://developers.google.com/admob/android/next-gen/banner)
+ * [AdSize docs](https://developers.google.com/admob/android/next-gen/reference/kotlin/com/google/android/libraries/ads/mobile/sdk/banner/AdSize)
  *
  * @param modifier The modifier to be applied to the ad.
  * @param adUnitId The ad unit ID for this banner ad. See [Test ads](https://developers.google.com/admob/android/test-ads) for test ad unit IDs.
- * @param adSize The size of the banner ad. See [AdSize](https://developers.google.com/android/reference/com/google/android/gms/ads/AdSize) for more information.
- * @param loadAdRequest A lambda that returns an [AdRequest]. Defaults to a new [AdRequest.Builder().build()].
- * @param adListener An [AdListener] for observing ad events.
+ * @param adSize The size of the banner ad. See [AdSize](https://developers.google.com/admob/android/next-gen/reference/kotlin/com/google/android/libraries/ads/mobile/sdk/banner/AdSize) for more information.
+ * @param loadAdRequest A lambda that returns a [BannerAdRequest].
+ * @param adListener An [AdMobAdListener] for observing ad events.
  * @param preOccupySpace If true, the composable will pre-occupy the space of the ad size before the ad is loaded. This can prevent layout shifts.
  *
  * @author Miroslav Hýbler <br>
@@ -479,8 +462,10 @@ private fun AdMobBanner(
     modifier: Modifier = Modifier,
     adUnitId: String,
     adSize: AdSize,
-    loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
-    adListener: AdListener? = null,
+    loadAdRequest: () -> BannerAdRequest = {
+        BannerAdRequest.Builder(adUnitId, adSize).build()
+    },
+    adListener: AdMobAdListener? = null,
     preOccupySpace: Boolean = false,
 ) {
     val state = rememberAdMobBannerState(
@@ -510,7 +495,6 @@ private fun AdMobBanner(
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun AdMobBanner(
     modifier: Modifier = Modifier,
@@ -555,13 +539,6 @@ private fun AdMobBannerImplementation(
         )
     } else {
         modifier.wrapContentSize()
-    }
-
-    LifecycleResumeEffect(key1 = state) {
-        state.resume()
-        onPauseOrDispose {
-            state.pause()
-        }
     }
 
     AndroidView(

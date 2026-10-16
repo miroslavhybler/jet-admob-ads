@@ -10,7 +10,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        minSdk = 23
+        minSdk = 24
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -64,13 +64,15 @@ dependencies {
     compileOnly(libs.androidx.compose.material3)
 
     /** Google AdMob Ads SDK */
-    implementation(libs.play.services.ads.api)
+    api(libs.ads.mobile.sdk)
 
     /** XML for Native ads */
     implementation(libs.androidx.constraintlayout)
 
 
     testImplementation(libs.junit)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.runtime)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
@@ -80,7 +82,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "com.jet"
             artifactId = "admob"
-            version = "1.1.0"
+            version = "2.0.0"
 
             afterEvaluate {
                 from(components["release"])

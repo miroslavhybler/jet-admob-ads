@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.ads.AdSize
+import com.google.android.libraries.ads.mobile.sdk.banner.AdSize
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobBanner
 import com.jet.admob.AdMobNative

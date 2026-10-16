@@ -1,23 +1,20 @@
-@file:Suppress("DEPRECATION")
-
 package com.jet.admob
 
-import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.AdRequest
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd
+import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAdEventCallback
 import com.jet.admob.annotations.JetAdMobAlpha
 
 /**
@@ -32,18 +29,16 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobInterstitialAdState constructor(
     private val context: Context,
     private val adUnitId: String,
-    private val isAutoloading: Boolean = true
+    private val isAutoloading: Boolean = true,
 ) {
 
-    /**
-     * Holds actual [InterstitialAd].
-     * @since 1.0.0
-     */
-    private var interstitialAd: InterstitialAd? by mutableStateOf(value = null)
+    private var interstitialAd: InterstitialAd? = null
+    private var presentingAd: InterstitialAd? = null
+    private var isLoading: Boolean = false
+    private var isDestroyed: Boolean = false
 
     /**
      * `True` if an ad is currently loaded and ready to be shown.
@@ -56,7 +51,6 @@ class AdMobInterstitialAdState constructor(
      * Holds the [LoadAdError] if the last ad request failed. `Null` otherwise.
      * @since 1.0.0
      */
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     var adError: LoadAdError? by mutableStateOf(value = null)
         private set
 
@@ -79,27 +73,47 @@ class AdMobInterstitialAdState constructor(
      * @since 1.0.0
      */
     fun loadAd() {
-        if (isAdLoaded || interstitialAd != null) return
+        runOnMainThread {
+            loadAdOnMainThread()
+        }
+    }
 
-        val adRequest = AdRequest.Builder().build()
+    private fun loadAdOnMainThread() {
+        if (isDestroyed || isLoading || isAdLoaded || interstitialAd != null) return
+
+        isLoading = true
+        val adRequest = AdRequest.Builder(adUnitId).build()
         InterstitialAd.load(
-            context,
-            adUnitId,
             adRequest,
-            object : InterstitialAdLoadCallback() {
+            object : AdLoadCallback<InterstitialAd> {
                 override fun onAdLoaded(ad: InterstitialAd) {
-                    interstitialAd = ad
-                    isAdLoaded = true
-                    adError = null
-                    presentationState = AdPresentationState.Idle
+                    runOnMainThread {
+                        isLoading = false
+                        if (isDestroyed) {
+                            ad.destroy()
+                            return@runOnMainThread
+                        }
+
+                        interstitialAd?.destroy()
+                        interstitialAd = ad
+                        isAdLoaded = true
+                        adError = null
+                        presentationState = AdPresentationState.Idle
+                    }
                 }
 
-                override fun onAdFailedToLoad(error: LoadAdError) {
-                    interstitialAd = null
-                    isAdLoaded = false
-                    adError = error
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    runOnMainThread {
+                        isLoading = false
+                        if (isDestroyed) return@runOnMainThread
+
+                        interstitialAd?.destroy()
+                        interstitialAd = null
+                        isAdLoaded = false
+                        this@AdMobInterstitialAdState.adError = adError
+                    }
                 }
-            }
+            },
         )
     }
 
@@ -113,6 +127,14 @@ class AdMobInterstitialAdState constructor(
     fun show(
         onAdDismissed: () -> Unit = {},
     ) {
+        runOnMainThread {
+            showOnMainThread(onAdDismissed = onAdDismissed)
+        }
+    }
+
+    private fun showOnMainThread(onAdDismissed: () -> Unit) {
+        if (isDestroyed) return
+
         val activity = context.findActivity() ?: run {
             Log.e(
                 "INTERSTITIAL_AD",
@@ -122,29 +144,67 @@ class AdMobInterstitialAdState constructor(
             )
             return
         }
-        interstitialAd?.let { ad ->
-            ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-                override fun onAdDismissedFullScreenContent() {
+        val ad = interstitialAd ?: return
+
+        interstitialAd = null
+        presentingAd = ad
+        isAdLoaded = false
+
+        ad.adEventCallback = object : InterstitialAdEventCallback {
+            override fun onAdDismissedFullScreenContent() {
+                runOnMainThread {
+                    releasePresentingAd(ad)
+                    if (isDestroyed) return@runOnMainThread
+
                     presentationState = AdPresentationState.Dismissed
-                    interstitialAd = null
-                    isAdLoaded = false
                     onAdDismissed()
                     if (isAutoloading) {
-                        loadAd() // Preload the next ad
+                        loadAdOnMainThread()
                     }
                 }
+            }
 
-                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    presentationState = AdPresentationState.FailedToShow(adError)
-                    interstitialAd = null
+            override fun onAdFailedToShowFullScreenContent(
+                fullScreenContentError: FullScreenContentError,
+            ) {
+                runOnMainThread {
+                    releasePresentingAd(ad)
+                    if (isDestroyed) return@runOnMainThread
+
+                    presentationState = AdPresentationState.FailedToShow(fullScreenContentError)
                     isAdLoaded = false
                 }
+            }
 
-                override fun onAdShowedFullScreenContent() {
-                    presentationState = AdPresentationState.Showed
+            override fun onAdShowedFullScreenContent() {
+                runOnMainThread {
+                    if (!isDestroyed) {
+                        presentationState = AdPresentationState.Showed
+                    }
                 }
             }
-            ad.show(activity)
+        }
+        ad.show(activity)
+    }
+
+    private fun releasePresentingAd(ad: InterstitialAd) {
+        if (presentingAd === ad) {
+            presentingAd = null
+            ad.destroy()
+        }
+    }
+
+    internal fun destroy() {
+        runOnMainThread {
+            if (isDestroyed) return@runOnMainThread
+
+            isDestroyed = true
+            isLoading = false
+            interstitialAd?.destroy()
+            presentingAd?.destroy()
+            interstitialAd = null
+            presentingAd = null
+            isAdLoaded = false
         }
     }
 }
@@ -154,7 +214,6 @@ class AdMobInterstitialAdState constructor(
  * Represents the presentation state of an interstitial ad.
  * @since 1.0.0
  */
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 sealed interface AdPresentationState {
 
     /**
@@ -179,9 +238,8 @@ sealed interface AdPresentationState {
      * The ad failed to show.
      * @since 1.0.0
      */
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
     class FailedToShow constructor(
-        val error: AdError,
+        val error: FullScreenContentError,
     ) : AdPresentationState
 }
 
@@ -198,19 +256,25 @@ sealed interface AdPresentationState {
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobInterstitialAdState(
     adUnitId: String,
-    isAutoloading: Boolean = true
+    isAutoloading: Boolean = true,
 ): AdMobInterstitialAdState {
     val context = LocalContext.current
-    val state = remember(key1 = adUnitId) {
+    val state = remember(context, adUnitId, isAutoloading) {
         AdMobInterstitialAdState(
             context = context,
             adUnitId = adUnitId,
             isAutoloading = isAutoloading,
         )
     }
+
+    DisposableEffect(key1 = state) {
+        onDispose {
+            state.destroy()
+        }
+    }
+
     return state
 }

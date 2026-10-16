@@ -4,8 +4,8 @@ package com.jet.admob
 
 
 /**
- * * [AdMob Quick Start](https://developers.google.com/admob/android/quick-start)
- * * [Test Ads](https://developers.google.com/admob/android/test-ads)
+ * * [GMA Next-Gen SDK quick start](https://developers.google.com/admob/android/next-gen/quick-start)
+ * * [Test Ads](https://developers.google.com/admob/android/next-gen/test-ads)
  * * [Load ad error codes](https://support.google.com/admob/thread/3494603/admob-error-codes-logs?hl=en)
  * @author Miroslav Hýbler <br>
  * created on 06.01.2026

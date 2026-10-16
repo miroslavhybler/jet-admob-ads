@@ -1,22 +1,26 @@
-@file:Suppress("RedundantVisibilityModifier", "DEPRECATION", "OPT_IN_USAGE")
+@file:Suppress("RedundantVisibilityModifier", "OPT_IN_USAGE")
 
 package com.jet.admob
 
-import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
+import android.os.Looper
 import android.util.Log
+import androidx.annotation.MainThread
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.rewarded.RewardedAd
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.AdRequest
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.rewarded.OnUserEarnedRewardListener
+import com.google.android.libraries.ads.mobile.sdk.rewarded.RewardItem
+import com.google.android.libraries.ads.mobile.sdk.rewarded.RewardedAd
+import com.google.android.libraries.ads.mobile.sdk.rewarded.RewardedAdEventCallback
 import com.jet.admob.annotations.JetAdMobAlpha
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,42 +34,66 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @JetAdMobAlpha
 @Immutable
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 public class AdMobRewardedAdState internal constructor(
     val adUnitId: String,
-    val onUserEarnedReward: () -> Unit
+    val onUserEarnedReward: () -> Unit,
 ) {
     private val mAdStatus = MutableStateFlow<AdStatus>(value = AdStatus.Loading)
     val adStatus = mAdStatus.asStateFlow()
 
     private var rewardedAd: RewardedAd? = null
+    private var presentingAd: RewardedAd? = null
+    private var isLoading: Boolean = false
+    private var isDestroyed: Boolean = false
 
     /**
      * Loads a new rewarded ad.
      *
-     * @param context The context to use for loading the ad.
+     * @param context The context to use for loading the ad. Retained for source compatibility.
      */
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+    @Suppress("UNUSED_PARAMETER")
     fun load(
         context: Context,
-        adRequest: AdRequest = AdRequest.Builder().build(),
+        adRequest: AdRequest = AdRequest.Builder(adUnitId).build(),
     ) {
+        runOnMainThread {
+            loadOnMainThread(adRequest = adRequest)
+        }
+    }
+
+    private fun loadOnMainThread(adRequest: AdRequest) {
+        if (isDestroyed || isLoading || rewardedAd != null || presentingAd != null) return
+
+        isLoading = true
         mAdStatus.value = AdStatus.Loading
         RewardedAd.load(
-            context,
-            adUnitId,
             adRequest,
-            object : RewardedAdLoadCallback() {
+            object : AdLoadCallback<RewardedAd> {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
-                    rewardedAd = null
-                    mAdStatus.value = AdStatus.Failed
+                    runOnMainThread {
+                        isLoading = false
+                        if (isDestroyed) return@runOnMainThread
+
+                        rewardedAd?.destroy()
+                        rewardedAd = null
+                        mAdStatus.value = AdStatus.Failed
+                    }
                 }
 
                 override fun onAdLoaded(ad: RewardedAd) {
-                    rewardedAd = ad
-                    mAdStatus.value = AdStatus.Loaded
+                    runOnMainThread {
+                        isLoading = false
+                        if (isDestroyed) {
+                            ad.destroy()
+                            return@runOnMainThread
+                        }
+
+                        rewardedAd?.destroy()
+                        rewardedAd = ad
+                        mAdStatus.value = AdStatus.Loaded
+                    }
                 }
-            }
+            },
         )
     }
 
@@ -73,9 +101,16 @@ public class AdMobRewardedAdState internal constructor(
      * Shows the rewarded ad.
      *
      * @param context The context to use for showing the ad.
-     * @return True if the ad was shown, false otherwise.
+     * @return True if the ad was ready and scheduled to be shown, false otherwise.
      */
+    @MainThread
     fun show(context: Context): Boolean {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Log.e("REWARDED_AD", "RewardedAd.show() must be called on the main thread")
+            return false
+        }
+        if (isDestroyed) return false
+
         val activity = context.findActivity() ?: run {
             Log.e(
                 "REWARDED_AD",
@@ -85,34 +120,77 @@ public class AdMobRewardedAdState internal constructor(
             )
             return false
         }
-        val adToShow = rewardedAd ?: run {
+        val ad = rewardedAd ?: run {
             Log.w("REWARDED_AD", "A show() was called but the rewarded ad wasn't ready yet")
             return false
         }
 
-        adToShow.fullScreenContentCallback = object : FullScreenContentCallback() {
+        rewardedAd = null
+        presentingAd = ad
+        ad.adEventCallback = object : RewardedAdEventCallback {
             override fun onAdDismissedFullScreenContent() {
-                rewardedAd = null
-                load(context = context)
+                runOnMainThread {
+                    releasePresentingAd(ad)
+                    if (!isDestroyed) {
+                        load(context = context)
+                    }
+                }
             }
 
-            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                rewardedAd = null
-                Log.e(
-                    "JetAdMobAds",
-                    "REWARDED_AD onAdFailedToShowFullScreenContent: ${adError.message}"
-                )
-                mAdStatus.value = AdStatus.Failed
+            override fun onAdFailedToShowFullScreenContent(
+                fullScreenContentError: FullScreenContentError,
+            ) {
+                runOnMainThread {
+                    releasePresentingAd(ad)
+                    if (isDestroyed) return@runOnMainThread
+
+                    Log.e(
+                        "JetAdMobAds",
+                        "REWARDED_AD onAdFailedToShowFullScreenContent: ${fullScreenContentError.message}"
+                    )
+                    mAdStatus.value = AdStatus.Failed
+                }
             }
 
             override fun onAdShowedFullScreenContent() {
-                mAdStatus.value = AdStatus.Shown
+                runOnMainThread {
+                    if (!isDestroyed) {
+                        mAdStatus.value = AdStatus.Shown
+                    }
+                }
             }
         }
-        adToShow.show(activity) {
-            onUserEarnedReward()
-        }
+        ad.show(
+            activity,
+            object : OnUserEarnedRewardListener {
+                override fun onUserEarnedReward(reward: RewardItem) {
+                    runOnMainThread {
+                        onUserEarnedReward()
+                    }
+                }
+            },
+        )
         return true
+    }
+
+    private fun releasePresentingAd(ad: RewardedAd) {
+        if (presentingAd === ad) {
+            presentingAd = null
+            ad.destroy()
+        }
+    }
+
+    internal fun destroy() {
+        runOnMainThread {
+            if (isDestroyed) return@runOnMainThread
+
+            isDestroyed = true
+            isLoading = false
+            rewardedAd?.destroy()
+            presentingAd?.destroy()
+            rewardedAd = null
+            presentingAd = null
+        }
     }
 }
 
@@ -125,21 +203,29 @@ public class AdMobRewardedAdState internal constructor(
  * @since 1.0.0
  */
 @Composable
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 public fun rememberAdMobRewardedAdState(
     adUnitId: String,
-    onUserEarnedReward: () -> Unit
+    onUserEarnedReward: () -> Unit,
 ): AdMobRewardedAdState {
     val context = LocalContext.current
-    val rewardedAdState = remember {
+    val currentOnUserEarnedReward = rememberUpdatedState(onUserEarnedReward)
+    val rewardedAdState = remember(adUnitId) {
         AdMobRewardedAdState(
             adUnitId = adUnitId,
-            onUserEarnedReward = onUserEarnedReward
+            onUserEarnedReward = {
+                currentOnUserEarnedReward.value()
+            },
         )
     }
 
-    LaunchedEffect(key1 = adUnitId) {
+    LaunchedEffect(key1 = rewardedAdState) {
         rewardedAdState.load(context = context)
+    }
+
+    DisposableEffect(key1 = rewardedAdState) {
+        onDispose {
+            rewardedAdState.destroy()
+        }
     }
 
     return rewardedAdState
