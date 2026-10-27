@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobBanner
 import com.jet.admob.AdMobBannerState
+import com.jet.admob.AdSize
 import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
@@ -30,27 +31,27 @@ import com.jet.admob.rememberAdMobBannerState
 fun BannersScreen() {
     val bannerState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-        adSize = AdMobBannerState.BANNER,
+        adSize = AdSize.BANNER,
     )
     val fullBannerState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-        adSize = AdMobBannerState.FULL_BANNER,
+        adSize = AdSize.FULL_BANNER,
     )
     val largeBannerState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-        adSize = AdMobBannerState.LARGE_BANNER,
+        adSize = AdSize.LARGE_BANNER,
     )
     val leaderboardState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-        adSize = AdMobBannerState.LEADERBOARD,
+        adSize = AdSize.LEADERBOARD,
     )
     val mediumRectangleState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-        adSize = AdMobBannerState.MEDIUM_RECTANGLE,
+        adSize = AdSize.MEDIUM_RECTANGLE,
     )
     val wideSkyscraperState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.ADAPTIVE_BANNER,
-        adSize = AdMobBannerState.WIDE_SKYSCRAPER,
+        adSize = AdSize.WIDE_SKYSCRAPER,
     )
 
     LazyColumnScreen(

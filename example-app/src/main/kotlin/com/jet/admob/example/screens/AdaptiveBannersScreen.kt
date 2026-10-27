@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.jet.admob.AdMobAdsUtil
-import com.jet.admob.AdMobBannerState
+import com.jet.admob.AdSize
 import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
 import com.jet.admob.example.LazyColumnScreen
@@ -28,15 +28,15 @@ fun AdaptiveBannersScreen() {
     val screenWidthDp = (screenWidth / density.density).toInt()
 
     val landscapeAnchoredAdSize = remember(context, screenWidthDp) {
-        AdMobBannerState.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+        AdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
     }
 
     val portraitAnchoredAdSize = remember(context, screenWidthDp) {
-        AdMobBannerState.getLargePortraitAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+        AdSize.getLargePortraitAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
     }
 
     val inlineAdaptiveAdSize = remember(screenWidthDp) {
-        AdMobBannerState.getInlineAdaptiveBannerAdSize(screenWidthDp, 128)
+        AdSize.getInlineAdaptiveBannerAdSize(screenWidthDp, 128)
     }
 
     val landscapeAnchoredAdState = rememberAdMobBannerState(

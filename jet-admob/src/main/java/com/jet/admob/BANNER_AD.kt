@@ -30,7 +30,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdSize as GoogleAdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
 import com.jet.admob.annotations.JetAdMobAlpha
@@ -45,15 +45,33 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobBannerState internal constructor(
     val adUnitId: String,
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
-    val adSize: AdSize,
+    @Deprecated(
+        message = "Use size. The legacy Google Mobile Ads AdSize will be removed in 2.0.0.",
+        replaceWith = ReplaceWith(expression = "size"),
+    )
+    val adSize: GoogleAdSize,
+    val size: AdSize,
     private val adView: AdView?,
     private var loadAdRequest: () -> AdRequest,
     private var adListener: AdListener?,
 ) {
+
+    internal constructor(
+        adUnitId: String,
+        adSize: GoogleAdSize,
+        adView: AdView?,
+        loadAdRequest: () -> AdRequest,
+        adListener: AdListener?,
+    ) : this(
+        adUnitId = adUnitId,
+        adSize = adSize,
+        size = AdSize.fromGoogleAdSize(adSize),
+        adView = adView,
+        loadAdRequest = loadAdRequest,
+        adListener = adListener,
+    )
 
     private var isLoading: Boolean = false
     private var isLoaded: Boolean = false
@@ -72,16 +90,22 @@ class AdMobBannerState internal constructor(
          */
         @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
-        val AUTO_HEIGHT: Int = AdSize.AUTO_HEIGHT
+        val AUTO_HEIGHT: Int = GoogleAdSize.AUTO_HEIGHT
 
         /**
          * Mobile Marketing Association banner ad size (320x50 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.BANNER.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.BANNER",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val BANNER: AdSize = AdSize.BANNER
+        val BANNER: GoogleAdSize = GoogleAdSize.BANNER
 
         /**
          * A dynamically sized banner that matches its parent's width and changes height to match
@@ -89,18 +113,30 @@ class AdMobBannerState internal constructor(
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.FLUID.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.FLUID",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val FLUID: AdSize = AdSize.FLUID
+        val FLUID: GoogleAdSize = GoogleAdSize.FLUID
 
         /**
          * Interactive Advertising Bureau full banner ad size (468x60 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.FULL_BANNER.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.FULL_BANNER",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val FULL_BANNER: AdSize = AdSize.FULL_BANNER
+        val FULL_BANNER: GoogleAdSize = GoogleAdSize.FULL_BANNER
 
         /**
          * Constant that will cause the width of the ad to match the width of the device in the
@@ -110,52 +146,76 @@ class AdMobBannerState internal constructor(
          */
         @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
-        val FULL_WIDTH: Int = AdSize.FULL_WIDTH
+        val FULL_WIDTH: Int = GoogleAdSize.FULL_WIDTH
 
         /**
-         * An invalid [AdSize] that will cause the ad request to fail immediately.
+         * An invalid legacy ad size that will cause the ad request to fail immediately.
          *
          * @since 1.0.0
          */
         @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
         @JvmField
-        val INVALID: AdSize = AdSize.INVALID
+        val INVALID: GoogleAdSize = GoogleAdSize.INVALID
 
         /**
          * Large banner ad size (320x100 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.LARGE_BANNER.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.LARGE_BANNER",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val LARGE_BANNER: AdSize = AdSize.LARGE_BANNER
+        val LARGE_BANNER: GoogleAdSize = GoogleAdSize.LARGE_BANNER
 
         /**
          * Interactive Advertising Bureau leaderboard ad size (728x90 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.LEADERBOARD.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.LEADERBOARD",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val LEADERBOARD: AdSize = AdSize.LEADERBOARD
+        val LEADERBOARD: GoogleAdSize = GoogleAdSize.LEADERBOARD
 
         /**
          * Interactive Advertising Bureau medium rectangle ad size (300x250 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.MEDIUM_RECTANGLE.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.MEDIUM_RECTANGLE",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val MEDIUM_RECTANGLE: AdSize = AdSize.MEDIUM_RECTANGLE
+        val MEDIUM_RECTANGLE: GoogleAdSize = GoogleAdSize.MEDIUM_RECTANGLE
 
         /**
          * IAB wide skyscraper ad size (160x600 dp).
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.WIDE_SKYSCRAPER.",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.WIDE_SKYSCRAPER",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmField
-        val WIDE_SKYSCRAPER: AdSize = AdSize.WIDE_SKYSCRAPER
+        val WIDE_SKYSCRAPER: GoogleAdSize = GoogleAdSize.WIDE_SKYSCRAPER
 
         /**
          * Smart banner ad size.
@@ -167,91 +227,136 @@ class AdMobBannerState internal constructor(
         )
         @Suppress("DEPRECATION")
         @JvmField
-        val SMART_BANNER: AdSize = AdSize.SMART_BANNER
+        val SMART_BANNER: GoogleAdSize = GoogleAdSize.SMART_BANNER
 
         /**
          * Returns an inline adaptive banner [AdSize] with the given width and max height.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getInlineAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getInlineAdaptiveBannerAdSize(width, maxHeight)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getInlineAdaptiveBannerAdSize(
             width: Int,
             maxHeight: Int,
-        ): AdSize = AdSize.getInlineAdaptiveBannerAdSize(width, maxHeight)
+        ): GoogleAdSize = GoogleAdSize.getInlineAdaptiveBannerAdSize(width, maxHeight)
 
         /**
          * Returns an inline adaptive banner [AdSize] for the current orientation.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getCurrentOrientationInlineAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize =
+            GoogleAdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns an inline adaptive banner [AdSize] for landscape orientation.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getLandscapeInlineAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getLandscapeInlineAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getLandscapeInlineAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getLandscapeInlineAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize = GoogleAdSize.getLandscapeInlineAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns an inline adaptive banner [AdSize] for portrait orientation.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getPortraitInlineAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getPortraitInlineAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getPortraitInlineAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getPortraitInlineAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize = GoogleAdSize.getPortraitInlineAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns a large anchored adaptive banner [AdSize] for the current orientation.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getLargeAnchoredAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getLargeAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize = GoogleAdSize.getLargeAnchoredAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns a large anchored adaptive banner [AdSize] for landscape orientation.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getLargeLandscapeAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize =
+            GoogleAdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns a large anchored adaptive banner [AdSize] for portrait orientation.
          *
          * @since 1.0.0
          */
-        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        @Deprecated(
+            message = "Use AdSize.getLargePortraitAnchoredAdaptiveBannerAdSize().",
+            replaceWith = ReplaceWith(
+                expression = "AdSize.getLargePortraitAnchoredAdaptiveBannerAdSize(context, width)",
+                imports = ["com.jet.admob.AdSize"],
+            ),
+        )
         @JvmStatic
         fun getLargePortraitAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getLargePortraitAnchoredAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize =
+            GoogleAdSize.getLargePortraitAnchoredAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns an anchored adaptive banner [AdSize] for the current orientation.
@@ -266,7 +371,8 @@ class AdMobBannerState internal constructor(
         fun getCurrentOrientationAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize =
+            GoogleAdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns an anchored adaptive banner [AdSize] for landscape orientation.
@@ -281,7 +387,7 @@ class AdMobBannerState internal constructor(
         fun getLandscapeAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getLandscapeAnchoredAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize = GoogleAdSize.getLandscapeAnchoredAdaptiveBannerAdSize(context, width)
 
         /**
          * Returns an anchored adaptive banner [AdSize] for portrait orientation.
@@ -296,7 +402,7 @@ class AdMobBannerState internal constructor(
         fun getPortraitAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = AdSize.getPortraitAnchoredAdaptiveBannerAdSize(context, width)
+        ): GoogleAdSize = GoogleAdSize.getPortraitAnchoredAdaptiveBannerAdSize(context, width)
     }
 
     /**
@@ -392,10 +498,26 @@ class AdMobBannerState internal constructor(
  * Hoist this above lazy list items if the banner is displayed inside a `LazyColumn`/`LazyRow`.
  *
  * @param adUnitId The ad unit ID for this banner ad.
- * @param adSize The size of the banner ad.
- * @param loadAdRequest A lambda that returns an [AdRequest].
- * @param adListener An [AdListener] for observing ad events.
- * @since 1.0.0
+ * @param adSize The SDK-independent size of the banner ad.
+ * @since 1.1.0
+ */
+@JetAdMobAlpha
+@Composable
+fun rememberAdMobBannerState(
+    adUnitId: String,
+    adSize: AdSize,
+): AdMobBannerState = rememberAdMobBannerStateInternal(
+    adUnitId = adUnitId,
+    adSize = adSize,
+    loadAdRequest = { AdRequest.Builder().build() },
+    adListener = null,
+)
+
+
+/**
+ * Creates and remembers an [AdMobBannerState] with legacy request customization.
+ *
+ * @since 1.1.0
  */
 @JetAdMobAlpha
 @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
@@ -403,16 +525,57 @@ class AdMobBannerState internal constructor(
 fun rememberAdMobBannerState(
     adUnitId: String,
     adSize: AdSize,
+    loadAdRequest: () -> AdRequest,
+    adListener: AdListener? = null,
+): AdMobBannerState = rememberAdMobBannerStateInternal(
+    adUnitId = adUnitId,
+    adSize = adSize,
+    loadAdRequest = loadAdRequest,
+    adListener = adListener,
+)
+
+
+/**
+ * Creates and remembers an [AdMobBannerState] using the legacy SDK's ad size.
+ *
+ * @since 1.0.0
+ */
+@JetAdMobAlpha
+@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+@Composable
+fun rememberAdMobBannerState(
+    adUnitId: String,
+    adSize: GoogleAdSize,
     loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
     adListener: AdListener? = null,
+): AdMobBannerState = rememberAdMobBannerStateInternal(
+    adUnitId = adUnitId,
+    adSize = AdSize.fromGoogleAdSize(adSize),
+    googleAdSize = adSize,
+    loadAdRequest = loadAdRequest,
+    adListener = adListener,
+)
+
+
+@Composable
+private fun rememberAdMobBannerStateInternal(
+    adUnitId: String,
+    adSize: AdSize,
+    googleAdSize: GoogleAdSize? = null,
+    loadAdRequest: () -> AdRequest,
+    adListener: AdListener?,
 ): AdMobBannerState {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
+    val resolvedAdSize = remember(context, adSize, googleAdSize) {
+        googleAdSize ?: adSize.toGoogleAdSize(context)
+    }
 
-    val state = remember(context, adUnitId, adSize, isInspection) {
+    val state = remember(context, adUnitId, adSize, resolvedAdSize, isInspection) {
         AdMobBannerState(
             adUnitId = adUnitId,
-            adSize = adSize,
+            adSize = resolvedAdSize,
+            size = adSize,
             loadAdRequest = loadAdRequest,
             adListener = adListener,
             adView = if (isInspection) {
@@ -421,7 +584,7 @@ fun rememberAdMobBannerState(
                 AdView(context).apply {
                     id = View.generateViewId()
                     this.adUnitId = adUnitId
-                    setAdSize(adSize)
+                    setAdSize(resolvedAdSize)
                 }
             },
         )
@@ -460,11 +623,11 @@ fun rememberAdMobBannerState(
  * AdMob account.
  *
  * More info about Banner ads: [Banner ad overview](https://developers.google.com/admob/android/banner)
- * [AdSize docs](https://developers.google.com/admob/android/reference/com/google/android/gms/ads/AdSize)
+ * Sizes are described by the SDK-independent [AdSize].
  *
  * @param modifier The modifier to be applied to the ad.
  * @param adUnitId The ad unit ID for this banner ad. See [Test ads](https://developers.google.com/admob/android/test-ads) for test ad unit IDs.
- * @param adSize The size of the banner ad. See [AdSize](https://developers.google.com/android/reference/com/google/android/gms/ads/AdSize) for more information.
+ * @param adSize The size of the banner ad.
  * @param loadAdRequest A lambda that returns an [AdRequest]. Defaults to a new [AdRequest.Builder().build()].
  * @param adListener An [AdListener] for observing ad events.
  * @param preOccupySpace If true, the composable will pre-occupy the space of the ad size before the ad is loaded. This can prevent layout shifts.
@@ -510,7 +673,6 @@ private fun AdMobBanner(
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun AdMobBanner(
     modifier: Modifier = Modifier,
@@ -578,7 +740,7 @@ private fun AdMobBannerImplementation(
 @Composable
 private fun AdMobBannerInspection(
     modifier: Modifier,
-    adSize: AdSize,
+    adSize: GoogleAdSize,
 ) {
     val contentColor = LocalContentColor.current
     Column(

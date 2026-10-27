@@ -41,12 +41,13 @@ To add this library to your project, follow these steps:
 
 ### Banner Ad
 
-Create a banner state with `rememberAdMobBannerState`, then pass it to `AdMobBanner`:
+Create a banner state with `rememberAdMobBannerState`, using the library-owned `AdSize`, then pass
+it to `AdMobBanner`:
 
 ```kotlin
 val bannerState = rememberAdMobBannerState(
     adUnitId = "YOUR_AD_UNIT_ID",
-    adSize = AdMobBannerState.BANNER,
+    adSize = AdSize.BANNER,
 )
 
 AdMobBanner(
@@ -54,6 +55,10 @@ AdMobBanner(
     preOccupySpace = true,
 )
 ```
+
+`AdSize` also provides fixed, custom, inline adaptive, and large anchored adaptive banner sizes.
+It does not expose the underlying Google Mobile Ads SDK type, allowing the implementation to move
+to the Next-Gen SDK without changing banner size usage.
 
 ### Native Ad
 
@@ -86,7 +91,7 @@ This keeps the loaded ad alive when Compose temporarily disposes off-screen list
 ```kotlin
 val bannerState = rememberAdMobBannerState(
     adUnitId = "YOUR_BANNER_AD_UNIT_ID",
-    adSize = AdMobBannerState.BANNER,
+    adSize = AdSize.BANNER,
 )
 val nativeAdState = rememberAdMobNativeAdState(
     adUnitId = "YOUR_NATIVE_AD_UNIT_ID",
@@ -117,9 +122,9 @@ LazyColumn {
 }
 ```
 
-The older `AdMobBanner(adUnitId = ..., adSize = ...)` and `AdMobNative(adUnitId = ...)`
-overloads are still available for now, but they are deprecated and will become private soon.
-Both `rememberAdMobBannerState` and `rememberAdMobNativeAdState` also accept optional
-`loadAdRequest` and `adListener` parameters for custom targeting and event observation.
+The `rememberAdMobBannerState` overload that accepts
+`com.google.android.gms.ads.AdSize` remains available for migration but is deprecated. Legacy
+request and listener customization also remains deprecated until SDK-independent alternatives are
+introduced. Native ad APIs still use the legacy SDK bridge and are deprecated for the same reason.
 
 For more advanced usage and customization options, please refer to the source code and the example app included in this project.
