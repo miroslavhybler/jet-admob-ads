@@ -41,13 +41,13 @@ To add this library to your project, follow these steps:
 
 ### Banner Ad
 
-Create a banner state with `rememberAdMobBannerState`, using the library-owned `AdSize`, then pass
-it to `AdMobBanner`:
+Create a banner state with `rememberAdMobBannerState`, using the library-owned `BannerAdSize`, then
+pass it to `AdMobBanner`:
 
 ```kotlin
 val bannerState = rememberAdMobBannerState(
     adUnitId = "YOUR_AD_UNIT_ID",
-    adSize = AdSize.BANNER,
+    adSize = BannerAdSize.BANNER,
 )
 
 AdMobBanner(
@@ -56,9 +56,27 @@ AdMobBanner(
 )
 ```
 
-`AdSize` also provides fixed, custom, inline adaptive, and large anchored adaptive banner sizes.
-It does not expose the underlying Google Mobile Ads SDK type, allowing the implementation to move
-to the Next-Gen SDK without changing banner size usage.
+`BannerAdSize` also provides fixed, custom, inline adaptive, and large anchored adaptive banner
+sizes. It does not expose the underlying Google Mobile Ads SDK type, allowing the implementation to
+move to the Next-Gen SDK without changing banner size usage.
+
+Common targeting and lifecycle callbacks are also SDK-independent:
+
+```kotlin
+val bannerState = rememberAdMobBannerState(
+    adUnitId = "YOUR_AD_UNIT_ID",
+    adSize = BannerAdSize.BANNER,
+    requestConfig = AdRequestConfig(
+        keywords = setOf("travel", "outdoors"),
+        contentUrl = "https://example.com/article",
+    ),
+    eventListener = object : AdEventListener() {
+        override fun onAdFailedToLoad(error: AdErrorInfo) {
+            Log.w("Ads", error.message)
+        }
+    },
+)
+```
 
 ### Native Ad
 
@@ -91,7 +109,7 @@ This keeps the loaded ad alive when Compose temporarily disposes off-screen list
 ```kotlin
 val bannerState = rememberAdMobBannerState(
     adUnitId = "YOUR_BANNER_AD_UNIT_ID",
-    adSize = AdSize.BANNER,
+    adSize = BannerAdSize.BANNER,
 )
 val nativeAdState = rememberAdMobNativeAdState(
     adUnitId = "YOUR_NATIVE_AD_UNIT_ID",
@@ -122,9 +140,9 @@ LazyColumn {
 }
 ```
 
-The `rememberAdMobBannerState` overload that accepts
-`com.google.android.gms.ads.AdSize` remains available for migration but is deprecated. Legacy
-request and listener customization also remains deprecated until SDK-independent alternatives are
-introduced. Native ad APIs still use the legacy SDK bridge and are deprecated for the same reason.
+The recommended APIs use `BannerAdSize`, `AdRequestConfig`, `AdEventListener`, and `AdErrorInfo`,
+so application code does not need to import Google Mobile Ads SDK classes. Overloads accepting
+legacy `AdSize`, `AdRequest`, and `AdListener` types remain available for migration but are
+deprecated and will be removed in 2.0.0.
 
-For more advanced usage and customization options, please refer to the source code and the example app included in this project.
+For more advanced usage and customization options, refer to the source code and example app.

@@ -101,7 +101,6 @@ data class NativeAdColors(
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 class AdMobNativeAdState internal constructor(
     private val context: Context?,
     val adUnitId: String,
@@ -114,6 +113,7 @@ class AdMobNativeAdState internal constructor(
 
     private var isLoading: Boolean = false
     private var isDestroyed: Boolean = false
+    private var eventListener: AdEventListener? = null
     private val nativeAdViews = mutableMapOf<NativeAdFormat, NativeAdView>()
 
     internal val isLoadedForInspection: Boolean
@@ -131,6 +131,27 @@ class AdMobNativeAdState internal constructor(
         loadAdRequest: () -> AdRequest = this.loadAdRequest,
         adListener: AdListener? = this.adListener,
     ) {
+        this.loadAdRequest = loadAdRequest
+        this.adListener = adListener
+        loadAdInternal(loadAdRequest())
+    }
+
+    /** Loads the native ad with default request options. */
+    fun loadAd() {
+        loadAd(requestConfig = AdRequestConfig())
+    }
+
+    /** Loads the native ad with SDK-independent request options. */
+    fun loadAd(
+        requestConfig: AdRequestConfig,
+        eventListener: AdEventListener? = this.eventListener,
+    ) {
+        this.loadAdRequest = requestConfig::toAdRequest
+        this.eventListener = eventListener
+        loadAdInternal(requestConfig.toAdRequest())
+    }
+
+    private fun loadAdInternal(adRequest: AdRequest) {
         val context = context ?: return
         if (isLoading || nativeAd != null || isDestroyed) return
 
@@ -138,8 +159,9 @@ class AdMobNativeAdState internal constructor(
         loadNativeAd(
             context = context,
             adUnitId = adUnitId,
-            loadAdRequest = loadAdRequest,
+            adRequest = adRequest,
             adListener = adListener,
+            eventListener = eventListener,
         ) { ad ->
             isLoading = false
             if (isDestroyed) {
@@ -156,9 +178,15 @@ class AdMobNativeAdState internal constructor(
     internal fun updateLoadOptions(
         loadAdRequest: () -> AdRequest,
         adListener: AdListener?,
+        eventListener: AdEventListener?,
     ) {
         this.loadAdRequest = loadAdRequest
         this.adListener = adListener
+        this.eventListener = eventListener
+    }
+
+    internal fun loadInitialAd() {
+        loadAdInternal(loadAdRequest())
     }
 
     internal fun getNativeAdView(adFormat: NativeAdFormat): NativeAdView? {
@@ -185,10 +213,35 @@ class AdMobNativeAdState internal constructor(
  * Hoist this above lazy list items if the native ad is displayed inside a `LazyColumn`/`LazyRow`.
  *
  * @param adUnitId The ad unit ID for this native ad.
- * @param loadAdRequest A lambda that returns an [AdRequest].
- * @param adListener An [AdListener] for observing ad events.
  * @since 1.0.0
  */
+@JetAdMobAlpha
+@Composable
+fun rememberAdMobNativeAdState(
+    adUnitId: String,
+): AdMobNativeAdState = rememberAdMobNativeAdStateInternal(
+    adUnitId = adUnitId,
+    loadAdRequest = { AdRequest.Builder().build() },
+    adListener = null,
+    eventListener = null,
+)
+
+
+/** Creates and remembers a native ad state with SDK-independent request options. */
+@JetAdMobAlpha
+@Composable
+fun rememberAdMobNativeAdState(
+    adUnitId: String,
+    requestConfig: AdRequestConfig,
+    eventListener: AdEventListener? = null,
+): AdMobNativeAdState = rememberAdMobNativeAdStateInternal(
+    adUnitId = adUnitId,
+    loadAdRequest = requestConfig::toAdRequest,
+    adListener = null,
+    eventListener = eventListener,
+)
+
+
 @JetAdMobAlpha
 @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
@@ -196,6 +249,20 @@ fun rememberAdMobNativeAdState(
     adUnitId: String,
     loadAdRequest: () -> AdRequest = { AdRequest.Builder().build() },
     adListener: AdListener? = null,
+): AdMobNativeAdState = rememberAdMobNativeAdStateInternal(
+    adUnitId = adUnitId,
+    loadAdRequest = loadAdRequest,
+    adListener = adListener,
+    eventListener = null,
+)
+
+
+@Composable
+private fun rememberAdMobNativeAdStateInternal(
+    adUnitId: String,
+    loadAdRequest: () -> AdRequest,
+    adListener: AdListener?,
+    eventListener: AdEventListener?,
 ): AdMobNativeAdState {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
@@ -213,14 +280,12 @@ fun rememberAdMobNativeAdState(
         state.updateLoadOptions(
             loadAdRequest = loadAdRequest,
             adListener = adListener,
+            eventListener = eventListener,
         )
     }
 
     LaunchedEffect(key1 = state) {
-        state.loadAd(
-            loadAdRequest = loadAdRequest,
-            adListener = adListener,
-        )
+        state.loadInitialAd()
     }
 
     DisposableEffect(key1 = state) {
@@ -237,8 +302,9 @@ fun rememberAdMobNativeAdState(
 private fun loadNativeAd(
     context: Context,
     adUnitId: String,
-    loadAdRequest: () -> AdRequest,
+    adRequest: AdRequest,
     adListener: AdListener?,
+    eventListener: AdEventListener?,
     callback: (NativeAd?) -> Unit,
 ) {
     val builder = AdLoader.Builder(context, adUnitId)
@@ -250,28 +316,34 @@ private fun loadNativeAd(
         .withAdListener(object : AdListener() {
             override fun onAdClicked() {
                 adListener?.onAdClicked()
+                eventListener?.onAdClicked()
             }
 
             override fun onAdClosed() {
                 adListener?.onAdClosed()
+                eventListener?.onAdClosed()
             }
 
             override fun onAdFailedToLoad(adError: LoadAdError) {
                 Log.e("NATIVE_AD", "Failed to load native ad: ${adError.message}")
                 adListener?.onAdFailedToLoad(adError)
+                eventListener?.onAdFailedToLoad(adError.toAdErrorInfo())
                 callback(null)
             }
 
             override fun onAdImpression() {
                 adListener?.onAdImpression()
+                eventListener?.onAdImpression()
             }
 
             override fun onAdLoaded() {
                 adListener?.onAdLoaded()
+                eventListener?.onAdLoaded()
             }
 
             override fun onAdOpened() {
                 adListener?.onAdOpened()
+                eventListener?.onAdOpened()
             }
 
             override fun onAdSwipeGestureClicked() {
@@ -285,7 +357,7 @@ private fun loadNativeAd(
         )
         .build()
 
-    adLoader.loadAd(loadAdRequest())
+    adLoader.loadAd(adRequest)
 }
 
 
@@ -420,7 +492,6 @@ private fun AdMobNative(
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun AdMobNative(
     modifier: Modifier = Modifier,

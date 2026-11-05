@@ -12,8 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdError as GoogleAdError
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
@@ -32,12 +31,38 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
-class AdMobInterstitialAdState constructor(
+class AdMobInterstitialAdState private constructor(
     private val context: Context,
     private val adUnitId: String,
-    private val isAutoloading: Boolean = true
+    private val isAutoloading: Boolean,
+    private var requestConfig: AdRequestConfig,
+    @Suppress("UNUSED_PARAMETER") compatibilityMarker: Unit,
 ) {
+
+    constructor(
+        context: Context,
+        adUnitId: String,
+        isAutoloading: Boolean = true,
+    ) : this(
+        context = context,
+        adUnitId = adUnitId,
+        isAutoloading = isAutoloading,
+        requestConfig = AdRequestConfig(),
+        compatibilityMarker = Unit,
+    )
+
+    internal constructor(
+        context: Context,
+        adUnitId: String,
+        isAutoloading: Boolean,
+        requestConfig: AdRequestConfig,
+    ) : this(
+        context = context,
+        adUnitId = adUnitId,
+        isAutoloading = isAutoloading,
+        requestConfig = requestConfig,
+        compatibilityMarker = Unit,
+    )
 
     /**
      * Holds actual [InterstitialAd].
@@ -60,6 +85,10 @@ class AdMobInterstitialAdState constructor(
     var adError: LoadAdError? by mutableStateOf(value = null)
         private set
 
+    /** SDK-independent details about the last loading failure. */
+    var errorInfo: AdErrorInfo? by mutableStateOf(value = null)
+        private set
+
     /**
      * Represents the current presentation state of the ad.
      * @since 1.0.0
@@ -79,18 +108,24 @@ class AdMobInterstitialAdState constructor(
      * @since 1.0.0
      */
     fun loadAd() {
-        if (isAdLoaded || interstitialAd != null) return
+        loadAd(requestConfig = requestConfig)
+    }
 
-        val adRequest = AdRequest.Builder().build()
+    /** Loads a new interstitial using SDK-independent request options. */
+    fun loadAd(requestConfig: AdRequestConfig) {
+        if (isAdLoaded || interstitialAd != null) return
+        this.requestConfig = requestConfig
+
         InterstitialAd.load(
             context,
             adUnitId,
-            adRequest,
+            requestConfig.toAdRequest(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
                     interstitialAd = ad
                     isAdLoaded = true
                     adError = null
+                    errorInfo = null
                     presentationState = AdPresentationState.Idle
                 }
 
@@ -98,6 +133,7 @@ class AdMobInterstitialAdState constructor(
                     interstitialAd = null
                     isAdLoaded = false
                     adError = error
+                    errorInfo = error.toAdErrorInfo()
                 }
             }
         )
@@ -134,7 +170,7 @@ class AdMobInterstitialAdState constructor(
                     }
                 }
 
-                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                override fun onAdFailedToShowFullScreenContent(adError: GoogleAdError) {
                     presentationState = AdPresentationState.FailedToShow(adError)
                     interstitialAd = null
                     isAdLoaded = false
@@ -154,7 +190,6 @@ class AdMobInterstitialAdState constructor(
  * Represents the presentation state of an interstitial ad.
  * @since 1.0.0
  */
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 sealed interface AdPresentationState {
 
     /**
@@ -179,10 +214,14 @@ sealed interface AdPresentationState {
      * The ad failed to show.
      * @since 1.0.0
      */
-    @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
-    class FailedToShow constructor(
-        val error: AdError,
-    ) : AdPresentationState
+    class FailedToShow @Deprecated(
+        message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE,
+    ) constructor(
+        @Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
+        val error: GoogleAdError,
+    ) : AdPresentationState {
+        val errorInfo: AdErrorInfo = error.toAdErrorInfo()
+    }
 }
 
 
@@ -198,7 +237,6 @@ sealed interface AdPresentationState {
  * @since 1.0.0
  */
 @JetAdMobAlpha
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 @Composable
 fun rememberAdMobInterstitialAdState(
     adUnitId: String,
@@ -213,4 +251,24 @@ fun rememberAdMobInterstitialAdState(
         )
     }
     return state
+}
+
+
+/** Creates and remembers an interstitial state with SDK-independent request options. */
+@JetAdMobAlpha
+@Composable
+fun rememberAdMobInterstitialAdState(
+    adUnitId: String,
+    requestConfig: AdRequestConfig,
+    isAutoloading: Boolean = true,
+): AdMobInterstitialAdState {
+    val context = LocalContext.current
+    return remember(context, adUnitId, requestConfig, isAutoloading) {
+        AdMobInterstitialAdState(
+            context = context,
+            adUnitId = adUnitId,
+            isAutoloading = isAutoloading,
+            requestConfig = requestConfig,
+        )
+    }
 }

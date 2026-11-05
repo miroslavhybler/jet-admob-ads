@@ -30,13 +30,14 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @JetAdMobAlpha
 @Immutable
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 public class AdMobRewardedAdState internal constructor(
     val adUnitId: String,
     val onUserEarnedReward: () -> Unit
 ) {
     private val mAdStatus = MutableStateFlow<AdStatus>(value = AdStatus.Loading)
     val adStatus = mAdStatus.asStateFlow()
+    private val mErrorInfo = MutableStateFlow<AdErrorInfo?>(value = null)
+    val errorInfo = mErrorInfo.asStateFlow()
 
     private var rewardedAd: RewardedAd? = null
 
@@ -50,7 +51,28 @@ public class AdMobRewardedAdState internal constructor(
         context: Context,
         adRequest: AdRequest = AdRequest.Builder().build(),
     ) {
+        loadInternal(context = context, adRequest = adRequest)
+    }
+
+    /** Loads a rewarded ad with default request options. */
+    fun load(context: Context) {
+        load(context = context, requestConfig = AdRequestConfig())
+    }
+
+    /** Loads a rewarded ad with SDK-independent request options. */
+    fun load(
+        context: Context,
+        requestConfig: AdRequestConfig,
+    ) {
+        loadInternal(context = context, adRequest = requestConfig.toAdRequest())
+    }
+
+    private fun loadInternal(
+        context: Context,
+        adRequest: AdRequest,
+    ) {
         mAdStatus.value = AdStatus.Loading
+        mErrorInfo.value = null
         RewardedAd.load(
             context,
             adUnitId,
@@ -59,6 +81,7 @@ public class AdMobRewardedAdState internal constructor(
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     rewardedAd = null
                     mAdStatus.value = AdStatus.Failed
+                    mErrorInfo.value = adError.toAdErrorInfo()
                 }
 
                 override fun onAdLoaded(ad: RewardedAd) {
@@ -103,6 +126,7 @@ public class AdMobRewardedAdState internal constructor(
                     "REWARDED_AD onAdFailedToShowFullScreenContent: ${adError.message}"
                 )
                 mAdStatus.value = AdStatus.Failed
+                mErrorInfo.value = adError.toAdErrorInfo()
             }
 
             override fun onAdShowedFullScreenContent() {
@@ -125,7 +149,6 @@ public class AdMobRewardedAdState internal constructor(
  * @since 1.0.0
  */
 @Composable
-@Deprecated(message = LEGACY_GOOGLE_MOBILE_ADS_SDK_DEPRECATION_MESSAGE)
 public fun rememberAdMobRewardedAdState(
     adUnitId: String,
     onUserEarnedReward: () -> Unit

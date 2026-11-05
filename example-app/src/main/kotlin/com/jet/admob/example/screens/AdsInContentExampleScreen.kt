@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.jet.admob.AdMobAdsUtil
 import com.jet.admob.AdMobBanner
 import com.jet.admob.AdMobNative
-import com.jet.admob.AdSize
+import com.jet.admob.BannerAdSize
 import com.jet.admob.NativeAdFormat
 import com.jet.admob.annotations.JetAdMobAlpha
 import com.jet.admob.example.JetAdMobAdsTheme
@@ -31,7 +31,7 @@ import com.jet.admob.rememberAdMobNativeAdState
 fun AdsInContentExampleScreen() {
     val bannerAdState = rememberAdMobBannerState(
         adUnitId = AdMobAdsUtil.TestIds.FIXED_SIZE_BANNER,
-        adSize = AdSize.BANNER,
+        adSize = BannerAdSize.BANNER,
     )
     val nativeAdState = rememberAdMobNativeAdState(
         adUnitId = AdMobAdsUtil.TestIds.NATIVE,

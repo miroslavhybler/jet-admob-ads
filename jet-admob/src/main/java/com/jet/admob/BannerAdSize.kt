@@ -14,7 +14,7 @@ import com.jet.admob.annotations.JetAdMobAlpha
  * @since 1.1.0
  */
 @JetAdMobAlpha
-class AdSize private constructor(
+class BannerAdSize private constructor(
     val width: Int,
     val height: Int,
     private val descriptor: Descriptor,
@@ -34,7 +34,7 @@ class AdSize private constructor(
         descriptor = Descriptor.Custom(width = width, height = height),
     )
 
-    internal fun toGoogleAdSize(context: Context): GoogleAdSize = when (val value = descriptor) {
+    internal fun toAdSize(context: Context): GoogleAdSize = when (val value = descriptor) {
         Descriptor.Banner -> GoogleAdSize.BANNER
         Descriptor.Fluid -> GoogleAdSize.FLUID
         Descriptor.FullBanner -> GoogleAdSize.FULL_BANNER
@@ -63,7 +63,7 @@ class AdSize private constructor(
     }
 
     override fun equals(other: Any?): Boolean = this === other ||
-        other is AdSize &&
+        other is BannerAdSize &&
         width == other.width &&
         height == other.height &&
         descriptor == other.descriptor
@@ -79,7 +79,7 @@ class AdSize private constructor(
 
     companion object {
 
-        internal fun fromGoogleAdSize(adSize: GoogleAdSize): AdSize = AdSize(
+        internal fun fromAdSize(adSize: GoogleAdSize): BannerAdSize = BannerAdSize(
             width = adSize.width,
             height = adSize.height,
             descriptor = Descriptor.Legacy(adSize),
@@ -87,7 +87,7 @@ class AdSize private constructor(
 
         /** Mobile Marketing Association banner ad size (320x50 dp). */
         @JvmField
-        val BANNER: AdSize = AdSize(
+        val BANNER: BannerAdSize = BannerAdSize(
             width = 320,
             height = 50,
             descriptor = Descriptor.Banner,
@@ -95,7 +95,7 @@ class AdSize private constructor(
 
         /** A dynamically sized banner that matches its parent's width and content height. */
         @JvmField
-        val FLUID: AdSize = AdSize(
+        val FLUID: BannerAdSize = BannerAdSize(
             width = GoogleAdSize.FLUID.width,
             height = GoogleAdSize.FLUID.height,
             descriptor = Descriptor.Fluid,
@@ -103,7 +103,7 @@ class AdSize private constructor(
 
         /** Interactive Advertising Bureau full banner ad size (468x60 dp). */
         @JvmField
-        val FULL_BANNER: AdSize = AdSize(
+        val FULL_BANNER: BannerAdSize = BannerAdSize(
             width = 468,
             height = 60,
             descriptor = Descriptor.FullBanner,
@@ -111,7 +111,7 @@ class AdSize private constructor(
 
         /** Large banner ad size (320x100 dp). */
         @JvmField
-        val LARGE_BANNER: AdSize = AdSize(
+        val LARGE_BANNER: BannerAdSize = BannerAdSize(
             width = 320,
             height = 100,
             descriptor = Descriptor.LargeBanner,
@@ -119,7 +119,7 @@ class AdSize private constructor(
 
         /** Interactive Advertising Bureau leaderboard ad size (728x90 dp). */
         @JvmField
-        val LEADERBOARD: AdSize = AdSize(
+        val LEADERBOARD: BannerAdSize = BannerAdSize(
             width = 728,
             height = 90,
             descriptor = Descriptor.Leaderboard,
@@ -127,7 +127,7 @@ class AdSize private constructor(
 
         /** Interactive Advertising Bureau medium rectangle ad size (300x250 dp). */
         @JvmField
-        val MEDIUM_RECTANGLE: AdSize = AdSize(
+        val MEDIUM_RECTANGLE: BannerAdSize = BannerAdSize(
             width = 300,
             height = 250,
             descriptor = Descriptor.MediumRectangle,
@@ -135,7 +135,7 @@ class AdSize private constructor(
 
         /** Interactive Advertising Bureau wide skyscraper ad size (160x600 dp). */
         @JvmField
-        val WIDE_SKYSCRAPER: AdSize = AdSize(
+        val WIDE_SKYSCRAPER: BannerAdSize = BannerAdSize(
             width = 160,
             height = 600,
             descriptor = Descriptor.WideSkyscraper,
@@ -146,7 +146,7 @@ class AdSize private constructor(
         fun getInlineAdaptiveBannerAdSize(
             width: Int,
             maxHeight: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getInlineAdaptiveBannerAdSize(width, maxHeight),
             descriptor = Descriptor.InlineAdaptive(width = width, maxHeight = maxHeight),
         )
@@ -156,7 +156,7 @@ class AdSize private constructor(
         fun getCurrentOrientationInlineAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(
                 context,
                 width,
@@ -169,7 +169,7 @@ class AdSize private constructor(
         fun getLandscapeInlineAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getLandscapeInlineAdaptiveBannerAdSize(context, width),
             descriptor = Descriptor.LandscapeInlineAdaptive(width = width),
         )
@@ -179,7 +179,7 @@ class AdSize private constructor(
         fun getPortraitInlineAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getPortraitInlineAdaptiveBannerAdSize(context, width),
             descriptor = Descriptor.PortraitInlineAdaptive(width = width),
         )
@@ -189,7 +189,7 @@ class AdSize private constructor(
         fun getLargeAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getLargeAnchoredAdaptiveBannerAdSize(context, width),
             descriptor = Descriptor.LargeAnchoredAdaptive(width = width),
         )
@@ -199,7 +199,7 @@ class AdSize private constructor(
         fun getLargeLandscapeAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getLargeLandscapeAnchoredAdaptiveBannerAdSize(
                 context,
                 width,
@@ -212,7 +212,7 @@ class AdSize private constructor(
         fun getLargePortraitAnchoredAdaptiveBannerAdSize(
             context: Context,
             width: Int,
-        ): AdSize = adaptive(
+        ): BannerAdSize = adaptive(
             googleAdSize = GoogleAdSize.getLargePortraitAnchoredAdaptiveBannerAdSize(
                 context,
                 width,
@@ -223,7 +223,7 @@ class AdSize private constructor(
         private fun adaptive(
             googleAdSize: GoogleAdSize,
             descriptor: Descriptor,
-        ): AdSize = AdSize(
+        ): BannerAdSize = BannerAdSize(
             width = googleAdSize.width,
             height = googleAdSize.height,
             descriptor = descriptor,

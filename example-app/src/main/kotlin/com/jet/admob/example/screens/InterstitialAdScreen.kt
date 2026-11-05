@@ -59,12 +59,13 @@ fun InterstitialAdScreen() {
             text = when (val state = adState.presentationState) {
                 AdPresentationState.Idle -> "Ad is idle."
                 AdPresentationState.Dismissed -> "Ad was dismissed."
-                is AdPresentationState.FailedToShow -> "Ad failed to show: ${state.error.message}"
+                is AdPresentationState.FailedToShow ->
+                    "Ad failed to show: ${state.errorInfo.message}"
                 AdPresentationState.Showed -> "Ad is being shown."
             }
         )
 
-        adState.adError?.let {
+        adState.errorInfo?.let {
             Text(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 text = "Ad failed to load: ${it.message}",
