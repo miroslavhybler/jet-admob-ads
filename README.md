@@ -2,9 +2,6 @@
 
 A simple, fast way to use Google AdMob ads in your Jetpack Compose applications.
 
-> [!WARNING]
-> This library is currently in an alpha stage and is highly experimental. While it's safe and policy-compliant, please use it with caution and report any issues you encounter.
-
 This library provides a set of composables that make it easy to display banner and native ads with a high degree of customization, allowing you to seamlessly integrate them into your app's design while adhering to AdMob's policies.
 
 ## Prerequisites
@@ -33,7 +30,7 @@ To add this library to your project, follow these steps:
 
     ```kotlin
     dependencies {
-        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0-beta02")
+        implementation("com.github.miroslavhybler:jet-admob-ads:1.1.0")
     }
     ```
 
