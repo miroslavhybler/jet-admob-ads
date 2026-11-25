@@ -1,5 +1,5 @@
 [versions]
-adsMobileSdk = "1.5.0"
+adsMobileSdk = "1.7.0"
 agp = "9.4.1"
 constraintlayout = "2.2.2"
 coreKtx = "1.19.1"
